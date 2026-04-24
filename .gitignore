@@ -1,0 +1,18 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+
+# Java/Spring Boot
+backend/target/
+*.class
+*.jar
+*.war
+.idea/
+*.iml
+.vscode/
+
+# OS Files
+.DS_Store
+Thumbs.db

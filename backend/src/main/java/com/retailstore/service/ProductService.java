@@ -1,0 +1,85 @@
+package com.retailstore.service;
+
+import com.retailstore.dto.ProductDTO;
+import com.retailstore.model.Category;
+import com.retailstore.model.Product;
+import com.retailstore.repository.CategoryRepository;
+import com.retailstore.repository.ProductRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@Transactional
+public class ProductService {
+
+    private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
+
+    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository) {
+        this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
+    }
+
+    public List<ProductDTO> getAllProducts() {
+        return productRepository.findAll().stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
+    public ProductDTO getProductById(Integer id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+        return toDTO(product);
+    }
+
+    public ProductDTO createProduct(ProductDTO dto) {
+        Category category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+        Product product = new Product();
+        product.setName(dto.getName());
+        product.setCategory(category);
+        product.setPrice(dto.getPrice());
+        product.setStockQuantity(dto.getStockQuantity());
+        product.setDescription(dto.getDescription());
+        product.setImageUrl(dto.getImageUrl());
+        return toDTO(productRepository.save(product));
+    }
+
+    public ProductDTO updateProduct(Integer id, ProductDTO dto) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+        if (dto.getName() != null) product.setName(dto.getName());
+        if (dto.getCategoryId() != null) {
+            Category category = categoryRepository.findById(dto.getCategoryId())
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+            product.setCategory(category);
+        }
+        if (dto.getPrice() != null) product.setPrice(dto.getPrice());
+        if (dto.getStockQuantity() != null) product.setStockQuantity(dto.getStockQuantity());
+        if (dto.getDescription() != null) product.setDescription(dto.getDescription());
+        return toDTO(productRepository.save(product));
+    }
+
+    public void deleteProduct(Integer id) {
+        if (!productRepository.existsById(id)) {
+            throw new RuntimeException("Product not found with id: " + id);
+        }
+        productRepository.deleteById(id);
+    }
+
+    private ProductDTO toDTO(Product product) {
+        ProductDTO dto = new ProductDTO();
+        dto.setId(product.getId());
+        dto.setName(product.getName());
+        dto.setCategoryId(product.getCategory().getId());
+        dto.setCategoryName(product.getCategory().getName());
+        dto.setPrice(product.getPrice());
+        dto.setStockQuantity(product.getStockQuantity());
+        dto.setDescription(product.getDescription());
+        dto.setImageUrl(product.getImageUrl());
+        dto.setCreatedAt(product.getCreatedAt() != null ? product.getCreatedAt().toString() : null);
+        dto.setUpdatedAt(product.getUpdatedAt() != null ? product.getUpdatedAt().toString() : null);
+        return dto;
+    }
+}
