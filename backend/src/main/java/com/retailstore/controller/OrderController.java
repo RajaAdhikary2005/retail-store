@@ -28,6 +28,11 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getOrderById(id));
     }
 
+    @PostMapping
+    public ResponseEntity<OrderDTO> createOrder(@RequestBody OrderDTO dto) {
+        return new ResponseEntity<>(orderService.createOrder(dto), HttpStatus.CREATED);
+    }
+
     @PatchMapping("/{id}/status")
     public ResponseEntity<OrderDTO> updateOrderStatus(
             @PathVariable Integer id,
