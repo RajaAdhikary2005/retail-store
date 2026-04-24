@@ -4,6 +4,7 @@ import {
   USERS, ROLES,
   type UserInfo, type UserRole,
   createStore, submitSignupRequest, isEmailPending, getStores,
+  loginApi, signupApi,
 } from '../services/auth';
 
 interface LoginProps {
@@ -66,17 +67,23 @@ export default function Login({ onLogin }: LoginProps) {
           setError('Please enter your store name');
           return;
         }
-        const store = createStore(storeName.trim(), email.toLowerCase());
-        const avatar = signupName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
-        const newUser: UserInfo = {
+        
+        const avatar = signupName.trim().split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
+        
+        signupApi({
           name: signupName.trim(),
           email: email.toLowerCase(),
+          password,
           role: 'admin',
           avatar,
-          storeId: store.id,
-        };
-        USERS[email.toLowerCase()] = { password, user: newUser };
-        onLogin(newUser);
+          status: 'approved'
+        }).then(() => {
+          return loginApi(email.toLowerCase(), password);
+        }).then(user => {
+          onLogin(user);
+        }).catch(err => {
+          setError(err.message);
+        });
         return;
       } else {
         // Manager / Staff signup — submit request for admin approval
@@ -84,37 +91,35 @@ export default function Login({ onLogin }: LoginProps) {
           setError('Please select a store to join');
           return;
         }
-        submitSignupRequest(
-          signupName.trim(),
-          email.toLowerCase(),
+        
+        const avatar = signupName.trim().split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
+        
+        signupApi({
+          name: signupName.trim(),
+          email: email.toLowerCase(),
           password,
-          signupRole as 'manager' | 'staff',
-          selectedStoreId
-        );
-        setSuccessMsg(
-          'REQUEST SUBMITTED YOU CAN LOGIN AFTER ADMIN APPROVES IT'
-        );
-        resetForm();
+          role: signupRole,
+          avatar,
+          storeId: selectedStoreId,
+          status: 'pending'
+        }).then(() => {
+          setSuccessMsg('REQUEST SUBMITTED YOU CAN LOGIN AFTER ADMIN APPROVES IT');
+          resetForm();
+        }).catch(err => {
+          setError(err.message);
+        });
         return;
       }
     }
 
     // --- Login Flow ---
-    const account = USERS[email.toLowerCase()];
-    if (!account) {
-      // Check if there's a pending request
-      if (isEmailPending(email)) {
-        setError('Your account is pending admin approval. Please wait for the store admin to approve your request.');
-        return;
-      }
-      setError('No account found with this email address');
-      return;
-    }
-    if (account.password !== password) {
-      setError('Incorrect password. Please try again.');
-      return;
-    }
-    onLogin(account.user);
+    loginApi(email.toLowerCase(), password)
+      .then(user => {
+        onLogin(user);
+      })
+      .catch(err => {
+        setError(err.message);
+      });
   };
 
   const availableStores = getStores();

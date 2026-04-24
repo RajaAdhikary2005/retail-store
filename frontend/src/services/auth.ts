@@ -1,4 +1,5 @@
 // Role-Based Access Control System
+const API_BASE = 'https://retail-store-k6pr.onrender.com/api';
 
 export type UserRole = 'admin' | 'manager' | 'staff';
 
@@ -104,6 +105,37 @@ export const USERS: Record<string, { password: string; user: UserInfo }> = {
     user: { name: 'Amit Kumar', email: 'staff@retailstore.com', role: 'staff', avatar: 'AK', storeId: 1 },
   },
 };
+
+// ---- Real Backend Auth ----
+export async function loginApi(email: string, password: string): Promise<UserInfo> {
+  const res = await fetch(`${API_BASE}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(error || 'Failed to login');
+  }
+  
+  return await res.json() as UserInfo;
+}
+
+export async function signupApi(data: any): Promise<any> {
+  const res = await fetch(`${API_BASE}/auth/signup`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(error || 'Failed to signup');
+  }
+  
+  return await res.json();
+}
 
 // ---- Store Helpers ----
 let nextStoreId = 2;
