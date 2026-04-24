@@ -179,6 +179,14 @@ export async function createReturn(ret: any): Promise<ReturnRequest> {
   return apiPost('/returns', ret);
 }
 
+export async function updateReturnStatus(id: number, status: string): Promise<ReturnRequest> {
+  const res = await fetch(`${API}/returns/${id}/status`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status })
+  });
+  return res.json();
+}
+
 // ===================== PROMOTIONS =====================
 export interface Promotion { id: number; name: string; type: string; description: string; code: string; discountValue: number; status: string; startDate: string; endDate: string; }
 

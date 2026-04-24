@@ -71,15 +71,20 @@ export default function Analytics() {
           <div className="card-body">
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               {(() => {
-                const totalSales = data.salesTrends.reduce((a, s) => a + s.sales, 0);
-                const avgSales = data.salesTrends.length > 0 ? Math.round(totalSales / data.salesTrends.length) : 0;
-                const totalOrders = data.salesTrends.reduce((a, s) => a + s.orders, 0);
-                const maxSales = data.salesTrends.length > 0 ? Math.max(...data.salesTrends.map(s => s.sales)) : 0;
+                // Compute from individual orders for accurate stats
+                const allOrders = data.salesTrends;
+                const totalSales = allOrders.reduce((a, s) => a + s.sales, 0);
+                const totalOrders = allOrders.reduce((a, s) => a + s.orders, 0);
+                const avgPerOrder = totalOrders > 0 ? Math.round(totalSales / totalOrders) : 0;
+                const maxMonthlySales = allOrders.length > 0 ? Math.max(...allOrders.map(s => s.sales)) : 0;
+                const avgMonthlySales = allOrders.length > 0 ? Math.round(totalSales / allOrders.length) : 0;
                 return [
                   { label: 'SUM(sales)', value: `₹${totalSales.toLocaleString()}`, color: 'var(--accent-blue)' },
-                  { label: 'AVG(sales)', value: `₹${avgSales.toLocaleString()}`, color: 'var(--accent-green)' },
-                  { label: 'COUNT(orders)', value: totalOrders.toLocaleString(), color: 'var(--accent-purple)' },
-                  { label: 'MAX(sales)', value: `₹${maxSales.toLocaleString()}`, color: 'var(--accent-orange)' },
+                  { label: 'AVG(per order)', value: `₹${avgPerOrder.toLocaleString()}`, color: 'var(--accent-green)' },
+                  { label: 'COUNT(orders)', value: totalOrders.toLocaleString(), color: 'var(--accent-purple, #8b5cf6)' },
+                  { label: 'MAX(monthly)', value: `₹${maxMonthlySales.toLocaleString()}`, color: 'var(--accent-orange)' },
+                  { label: 'AVG(monthly)', value: `₹${avgMonthlySales.toLocaleString()}`, color: '#06b6d4' },
+                  { label: 'MONTHS', value: allOrders.length.toLocaleString(), color: '#64748b' },
                 ].map(s => (
                   <div key={s.label} style={{ padding: 16, background: 'var(--bg-primary)', borderRadius: 'var(--radius-sm)', textAlign: 'center' }}>
                     <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>{s.label}</div>

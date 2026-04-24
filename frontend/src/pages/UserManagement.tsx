@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Users, Shield, UserX } from 'lucide-react';
-import { fetchUsers } from '../services/api';
+import { fetchUsers, logAction } from '../services/api';
 import { ROLES, type UserRole, type UserInfo } from '../services/auth';
 
 interface ManagedUser { id: number; name: string; email: string; role: UserRole; avatar: string; status: string; storeId?: number; }
@@ -49,6 +49,7 @@ export default function UserManagement({ user }: UserManagementProps) {
   const toggleSuspend = (u: ManagedUser) => {
     const next = u.status === 'active' || u.status === 'approved' ? 'suspended' : 'active';
     updateUserStatus(u.id, next);
+    logAction({ user: user?.name || 'Admin', action: `User ${next === 'active' ? 'activated' : 'suspended'}`, target: `${u.name} (${u.role})`, severity: next === 'suspended' ? 'warning' : 'info', iconStr: 'Shield' });
     flash(`${u.name} has been ${next === 'active' ? 'activated' : 'suspended'}.`);
   };
 

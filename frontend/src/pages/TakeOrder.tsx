@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Minus, Trash2, User, CheckCircle, X, Tag, Star, UserPlus } from 'lucide-react';
-import { fetchProducts, fetchCustomers, createOrder, createCustomer, findPromoByCode } from '../services/api';
+import { fetchProducts, fetchCustomers, createOrder, createCustomer, findPromoByCode, logAction } from '../services/api';
 import type { Product, Customer } from '../types';
 
 interface Props { userRole: string; userName: string; }
@@ -160,6 +160,7 @@ export default function TakeOrder({ userName }: Props) {
 
     try {
       await createOrder(orderData);
+      logAction({ user: userName, action: 'Completed order', target: `Customer: ${customerName}, Total: ₹${total}`, severity: 'info', iconStr: 'Plus' });
       setOrderComplete(true);
       setCart([]);
       setSelectedCustomer(null);
