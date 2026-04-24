@@ -120,12 +120,12 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
     const totalSales = validOrders.reduce((acc, o) => acc + o.totalAmount, 0);
     const totalOrders = mockOrders.length;
     const totalCustomers = mockCustomers.length;
-    
+
     // Simplistic monthly logic
     const thisMonth = new Date().toISOString().slice(0, 7);
     const thisMonthOrders = validOrders.filter(o => o.orderDate.startsWith(thisMonth));
     const monthlyRevenue = thisMonthOrders.reduce((acc, o) => acc + o.totalAmount, 0);
-    
+
     return {
       totalSales,
       totalOrders,
@@ -143,7 +143,7 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
 export async function fetchAnalytics(): Promise<AnalyticsData> {
   return apiFetch('/analytics', () => {
     const validOrders = mockOrders.filter(o => o.status !== 'Cancelled');
-    
+
     const productSales: Record<number, { name: string; sales: number; revenue: number }> = {};
     validOrders.forEach(o => {
       o.items.forEach(item => {
@@ -155,7 +155,7 @@ export async function fetchAnalytics(): Promise<AnalyticsData> {
         productSales[item.productId].revenue += item.totalPrice;
       });
     });
-    
+
     const topProducts = Object.values(productSales)
       .sort((a, b) => b.revenue - a.revenue)
       .map((p, i) => ({ ...p, rank: i + 1 }))
@@ -189,11 +189,11 @@ export async function fetchAnalytics(): Promise<AnalyticsData> {
       monthsObj[month].orders += 1;
       monthsObj[month].sales += o.totalAmount;
     });
-    
+
     const salesTrends = Object.entries(monthsObj)
       .map(([month, data]) => ({ month, sales: data.sales, orders: data.orders }))
       .sort((a, b) => a.month.localeCompare(b.month));
-      
+
     const monthlyRevenue = salesTrends.map(t => ({ month: t.month, revenue: t.sales, growth: 5.5 }));
 
     const inventoryAlerts = mockProducts
