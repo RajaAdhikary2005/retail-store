@@ -113,12 +113,27 @@ export async function logAction(log: any) {
 // ---- Returns ----
 export interface ReturnRequest { id: number; orderId: number; customerName: string; amount: number; reason: string; status: string; createdAt: string; }
 
-export async function fetchReturns(): Promise<ReturnRequest[]> {
-  return apiFetch('/returns', () => []);
+// ---- Promotions ----
+export interface Promotion { id: number; name: string; type: string; description: string; code: string; discountValue: number; status: string; startDate: string; endDate: string; }
+
+export async function fetchPromotions(): Promise<Promotion[]> {
+  return apiFetch('/promotions', () => []);
 }
 
-export async function createReturn(ret: any): Promise<ReturnRequest> {
-  return apiPost('/returns', ret);
+export async function createPromotion(promo: any): Promise<Promotion> {
+  return apiPost('/promotions', promo);
+}
+
+export async function findPromoByCode(code: string): Promise<Promotion | null> {
+  const promos = await fetchPromotions();
+  return promos.find(p => p.code.toUpperCase() === code.toUpperCase() && p.status === 'Active') || null;
+}
+
+// ---- Categories ----
+export interface Category { id: number; name: string; description: string; productCount: number; }
+
+export async function fetchCategories(): Promise<Category[]> {
+  return apiFetch('/categories', () => []);
 }
 
 // ---- Analytics & Dashboard ----
