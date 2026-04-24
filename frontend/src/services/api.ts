@@ -180,7 +180,7 @@ export async function createReturn(ret: any): Promise<ReturnRequest> {
 }
 
 export async function updateReturnStatus(id: number, status: string): Promise<ReturnRequest> {
-  const res = await fetch(`${API}/returns/${id}/status`, {
+  const res = await fetch(`${API_BASE}/returns/${id}/status`, {
     method: 'PUT', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status })
   });

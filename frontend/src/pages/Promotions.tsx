@@ -4,7 +4,7 @@ import { fetchPromotions, createPromotion, deletePromotion, type Promotion } fro
 
 export default function Promotions() {
   const [promos, setPromos] = useState<Promotion[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ 
     name: '', code: '', type: 'Percentage', discountValue: 0, startDate: '', endDate: '', description: '' 

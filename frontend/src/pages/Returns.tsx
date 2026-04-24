@@ -11,7 +11,7 @@ interface Props { userRole: UserRole; userName?: string; }
 export default function Returns({ userRole, userName = 'User' }: Props) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [returns, setReturns] = useState<ReturnRequest[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
 
   const [showModal, setShowModal] = useState(false);
   const [selOrderId, setSelOrderId] = useState(0);
