@@ -175,4 +175,32 @@ public class AuthController {
         response.put("storeId", saved.getStoreId());
         return ResponseEntity.ok(response);
     }
+
+    @PutMapping("/update-password")
+    public ResponseEntity<?> updatePassword(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        String currentPassword = body.get("currentPassword");
+        String newPassword = body.get("newPassword");
+
+        if (email == null || currentPassword == null || newPassword == null) {
+            return ResponseEntity.badRequest().body("All fields are required");
+        }
+        if (newPassword.length() < 6) {
+            return ResponseEntity.badRequest().body("New password must be at least 6 characters");
+        }
+
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        User user = userOpt.get();
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            return ResponseEntity.badRequest().body("Current password is incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        return ResponseEntity.ok("Password updated successfully");
+    }
 }

@@ -14,6 +14,38 @@ export default function Settings({ onLogout, user, onUpdateUser }: SettingsProps
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const roleInfo = ROLES[userInfo.role];
 
+  // Password state
+  const [curPwd, setCurPwd] = useState('');
+  const [newPwd, setNewPwd] = useState('');
+  const [pwdSaving, setPwdSaving] = useState(false);
+  const [pwdMsg, setPwdMsg] = useState<{ text: string; ok: boolean } | null>(null);
+
+  const handleUpdatePassword = async () => {
+    if (!curPwd || newPwd.length < 6) return;
+    setPwdSaving(true);
+    setPwdMsg(null);
+    try {
+      const res = await fetch(`${API_BASE}/auth/update-password`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: userInfo.email, currentPassword: curPwd, newPassword: newPwd }),
+      });
+      if (res.ok) {
+        setPwdMsg({ text: 'Password updated successfully!', ok: true });
+        setCurPwd('');
+        setNewPwd('');
+      } else {
+        const errText = await res.text();
+        setPwdMsg({ text: errText || 'Failed to update password', ok: false });
+      }
+    } catch {
+      setPwdMsg({ text: 'Network error', ok: false });
+    } finally {
+      setPwdSaving(false);
+      setTimeout(() => setPwdMsg(null), 4000);
+    }
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
@@ -117,13 +149,26 @@ export default function Settings({ onLogout, user, onUpdateUser }: SettingsProps
             <div className="card-body">
               <div className="form-group">
                 <label className="form-label">Current Password</label>
-                <input className="form-input" type="password" placeholder="••••••••" />
+                <input className="form-input" type="password" placeholder="Enter current password" value={curPwd} onChange={e => setCurPwd(e.target.value)} />
               </div>
               <div className="form-group">
-                <label className="form-label">New Password</label>
-                <input className="form-input" type="password" placeholder="••••••••" />
+                <label className="form-label">New Password (min 6 chars)</label>
+                <input className="form-input" type="password" placeholder="Enter new password" value={newPwd} onChange={e => setNewPwd(e.target.value)} />
               </div>
-              <button type="button" className="btn btn-secondary">Update Password</button>
+              {pwdMsg && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 8, marginBottom: 12,
+                  fontSize: 13, fontWeight: 500,
+                  background: pwdMsg.ok ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                  color: pwdMsg.ok ? '#10b981' : '#ef4444',
+                }}>
+                  {pwdMsg.ok ? <Check size={14} /> : <AlertCircle size={14} />}
+                  {pwdMsg.text}
+                </div>
+              )}
+              <button type="button" className="btn btn-secondary" onClick={handleUpdatePassword} disabled={pwdSaving || !curPwd || newPwd.length < 6}>
+                {pwdSaving ? 'Updating...' : 'Update Password'}
+              </button>
             </div>
           </div>
 
