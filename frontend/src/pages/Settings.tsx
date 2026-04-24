@@ -93,7 +93,7 @@ export default function Settings({ onLogout, user, onUpdateUser }: SettingsProps
     <>
       <div className="page-header"><h2>Settings</h2><p>Manage your profile and application preferences.</p></div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, maxWidth: 900 }}>
+      <div className="settings-grid">
         <div className="card">
           <div className="card-header"><h3><User size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />Profile Settings</h3></div>
           <div className="card-body">
