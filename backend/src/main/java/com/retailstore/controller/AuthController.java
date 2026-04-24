@@ -116,7 +116,10 @@ public class AuthController {
     }
 
     @GetMapping("/users")
-    public ResponseEntity<?> getAllUsers() {
+    public ResponseEntity<?> getAllUsers(@RequestParam(required = false) Long storeId) {
+        if (storeId != null) {
+            return ResponseEntity.ok(userRepository.findByStoreId(storeId));
+        }
         return ResponseEntity.ok(userRepository.findAll());
     }
 

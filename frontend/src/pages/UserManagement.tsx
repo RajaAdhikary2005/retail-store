@@ -3,7 +3,7 @@ import { Users, Shield, UserX } from 'lucide-react';
 import { fetchUsers } from '../services/api';
 import { ROLES, type UserRole, type UserInfo } from '../services/auth';
 
-interface ManagedUser { id: number; name: string; email: string; role: UserRole; avatar: string; status: string; }
+interface ManagedUser { id: number; name: string; email: string; role: UserRole; avatar: string; status: string; storeId?: number; }
 
 interface UserManagementProps {
   user?: UserInfo;
@@ -15,20 +15,23 @@ export default function UserManagement({ user }: UserManagementProps) {
   const [actionMsg, setActionMsg] = useState<string | null>(null);
 
   const currentUserEmail = user?.email || '';
+  const currentStoreId = user?.storeId;
 
   useEffect(() => {
-    fetchUsers().then(data => {
+    // Filter users by the admin's storeId so they only see their own store members
+    fetchUsers(currentStoreId).then(data => {
       setUsers(data.map((u: any) => ({
         id: u.id,
         name: u.name || 'Unknown',
         email: u.email,
         role: u.role || 'staff',
         avatar: u.avatar || (u.name || 'U').substring(0, 2).toUpperCase(),
-        status: u.status || 'active'
+        status: u.status || 'active',
+        storeId: u.storeId,
       })));
       setLoading(false);
     });
-  }, []);
+  }, [currentStoreId]);
 
   const flash = (msg: string) => { setActionMsg(msg); setTimeout(() => setActionMsg(null), 3000); };
 
@@ -82,7 +85,7 @@ export default function UserManagement({ user }: UserManagementProps) {
 
   return (
     <>
-      <div className="page-header"><h2>User & Staff Management</h2><p>Manage all user accounts, permissions, and access levels.</p></div>
+      <div className="page-header"><h2>User & Staff Management</h2><p>Manage user accounts for your store.</p></div>
 
       {actionMsg && <div style={{ padding: '12px 16px', marginBottom: 20, borderRadius: 'var(--radius-sm)', background: 'var(--accent-green-light)', color: 'var(--accent-green)', fontSize: 13, fontWeight: 500 }}>✓ {actionMsg}</div>}
 
@@ -93,7 +96,7 @@ export default function UserManagement({ user }: UserManagementProps) {
         <div className="stat-card"><div className="stat-info"><h4>Staff</h4><div className="stat-value" style={{ color: '#3b82f6' }}>{staff.length}</div></div><div className="stat-icon blue"><Users size={22} /></div></div>
       </div>
 
-      <div className="card"><div className="card-header"><h3><Users size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />All Users</h3></div>
+      <div className="card"><div className="card-header"><h3><Users size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />Your Store Users</h3></div>
         <div className="card-body" style={{ padding: 0 }}><table className="data-table"><thead><tr><th>User</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody>{users.map(u => renderUserRow(u))}</tbody></table></div></div>
     </>

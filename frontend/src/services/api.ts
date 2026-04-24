@@ -203,8 +203,9 @@ export async function fetchCategories(): Promise<Category[]> {
 }
 
 // ===================== USERS (from backend) =====================
-export async function fetchUsers(): Promise<any[]> {
-  return apiFetch('/auth/users', () => []);
+export async function fetchUsers(storeId?: number): Promise<any[]> {
+  const path = storeId ? `/auth/users?storeId=${storeId}` : '/auth/users';
+  return apiFetch(path, () => []);
 }
 
 // ===================== DASHBOARD & ANALYTICS =====================

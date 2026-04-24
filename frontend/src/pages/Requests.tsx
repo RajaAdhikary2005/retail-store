@@ -7,22 +7,25 @@ interface RequestsProps {
   user: UserInfo;
 }
 
-export default function Requests(_props: RequestsProps) {
+export default function Requests({ user }: RequestsProps) {
   const [pendingUsers, setPendingUsers] = useState<any[]>([]);
   const [processedUsers, setProcessedUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionMsg, setActionMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  const currentStoreId = user?.storeId;
+
   const loadUsers = () => {
     setLoading(true);
-    fetchUsers().then(data => {
+    // Filter by admin's storeId so they only see requests for their own store
+    fetchUsers(currentStoreId).then(data => {
       setPendingUsers(data.filter((u: any) => u.status === 'pending'));
       setProcessedUsers(data.filter((u: any) => u.status === 'approved' || u.status === 'rejected'));
       setLoading(false);
     });
   };
 
-  useEffect(() => { loadUsers(); }, []);
+  useEffect(() => { loadUsers(); }, [currentStoreId]);
 
   const handleAction = async (userId: number, status: string, userName: string) => {
     try {
@@ -43,7 +46,7 @@ export default function Requests(_props: RequestsProps) {
 
   return (
     <>
-      <div className="page-header"><h2>Account Requests</h2><p>Manage pending account creation requests from staff and managers.</p></div>
+      <div className="page-header"><h2>Account Requests</h2><p>Manage pending account requests for your store.</p></div>
 
       {actionMsg && (
         <div style={{ padding: '12px 16px', marginBottom: 20, borderRadius: 'var(--radius-sm)', background: actionMsg.type === 'success' ? 'var(--accent-green-light)' : 'var(--accent-red-light)', color: actionMsg.type === 'success' ? 'var(--accent-green)' : 'var(--accent-red)', fontSize: 13, fontWeight: 500 }}>
