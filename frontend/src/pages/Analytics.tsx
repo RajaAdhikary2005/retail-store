@@ -70,17 +70,23 @@ export default function Analytics() {
           <div className="card-header"><h3>Summary Statistics</h3></div>
           <div className="card-body">
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              {[
-                { label: 'SUM(sales)', value: `₹${data.salesTrends.reduce((a, s) => a + s.sales, 0).toLocaleString()}`, color: 'var(--accent-blue)' },
-                { label: 'AVG(sales)', value: `₹${Math.round(data.salesTrends.reduce((a, s) => a + s.sales, 0) / data.salesTrends.length).toLocaleString()}`, color: 'var(--accent-green)' },
-                { label: 'COUNT(orders)', value: data.salesTrends.reduce((a, s) => a + s.orders, 0).toLocaleString(), color: 'var(--accent-purple)' },
-                { label: 'MAX(sales)', value: `₹${Math.max(...data.salesTrends.map(s => s.sales)).toLocaleString()}`, color: 'var(--accent-orange)' },
-              ].map(s => (
-                <div key={s.label} style={{ padding: 16, background: 'var(--bg-primary)', borderRadius: 'var(--radius-sm)', textAlign: 'center' }}>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>{s.label}</div>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: s.color }}>{s.value}</div>
-                </div>
-              ))}
+              {(() => {
+                const totalSales = data.salesTrends.reduce((a, s) => a + s.sales, 0);
+                const avgSales = data.salesTrends.length > 0 ? Math.round(totalSales / data.salesTrends.length) : 0;
+                const totalOrders = data.salesTrends.reduce((a, s) => a + s.orders, 0);
+                const maxSales = data.salesTrends.length > 0 ? Math.max(...data.salesTrends.map(s => s.sales)) : 0;
+                return [
+                  { label: 'SUM(sales)', value: `₹${totalSales.toLocaleString()}`, color: 'var(--accent-blue)' },
+                  { label: 'AVG(sales)', value: `₹${avgSales.toLocaleString()}`, color: 'var(--accent-green)' },
+                  { label: 'COUNT(orders)', value: totalOrders.toLocaleString(), color: 'var(--accent-purple)' },
+                  { label: 'MAX(sales)', value: `₹${maxSales.toLocaleString()}`, color: 'var(--accent-orange)' },
+                ].map(s => (
+                  <div key={s.label} style={{ padding: 16, background: 'var(--bg-primary)', borderRadius: 'var(--radius-sm)', textAlign: 'center' }}>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>{s.label}</div>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: s.color }}>{s.value}</div>
+                  </div>
+                ));
+              })()}
             </div>
           </div>
         </div>
