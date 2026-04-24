@@ -1,10 +1,8 @@
 package com.retailstore.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import java.time.LocalDateTime;
 
-@Data
 @Entity
 @Table(name = "dues")
 public class Due {
@@ -22,6 +20,28 @@ public class Due {
     private LocalDateTime lastOrderDate;
     
     private LocalDateTime updatedAt;
+
+    public Due() {}
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
+    public Long getEntityId() { return entityId; }
+    public void setEntityId(Long entityId) { this.entityId = entityId; }
+    public String getEntityName() { return entityName; }
+    public void setEntityName(String entityName) { this.entityName = entityName; }
+    public String getContact() { return contact; }
+    public void setContact(String contact) { this.contact = contact; }
+    public Double getTotalDue() { return totalDue; }
+    public void setTotalDue(Double totalDue) { this.totalDue = totalDue; }
+    public Integer getPendingOrders() { return pendingOrders; }
+    public void setPendingOrders(Integer pendingOrders) { this.pendingOrders = pendingOrders; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    public LocalDateTime getLastOrderDate() { return lastOrderDate; }
+    public void setLastOrderDate(LocalDateTime lastOrderDate) { this.lastOrderDate = lastOrderDate; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
 
     @PrePersist
     @PreUpdate

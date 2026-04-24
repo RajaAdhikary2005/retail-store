@@ -34,8 +34,21 @@ public class ProductService {
     }
 
     public ProductDTO createProduct(ProductDTO dto) {
-        Category category = categoryRepository.findById(dto.getCategoryId())
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+        Category category;
+        if (dto.getCategoryId() != null) {
+            category = categoryRepository.findById(dto.getCategoryId())
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+        } else if (dto.getCategoryName() != null) {
+            category = categoryRepository.findByName(dto.getCategoryName())
+                    .orElseGet(() -> {
+                        Category newCat = new Category();
+                        newCat.setName(dto.getCategoryName());
+                        return categoryRepository.save(newCat);
+                    });
+        } else {
+            throw new RuntimeException("Category ID or Category Name is required");
+        }
+
         Product product = new Product();
         product.setName(dto.getName());
         product.setCategory(category);

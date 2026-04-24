@@ -10,7 +10,6 @@ public class ProductDTO {
     @Size(max = 200)
     private String name;
 
-    @NotNull(message = "Category ID is required")
     private Integer categoryId;
 
     private String categoryName;
