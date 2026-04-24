@@ -178,7 +178,7 @@ export default function TakeOrder({ userName }: Props) {
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 420px', gap: 24, height: 'calc(100vh - 140px)' }}>
+    <div className="pos-layout">
       {/* Product Selection */}
       <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
         <div className="card-header">
