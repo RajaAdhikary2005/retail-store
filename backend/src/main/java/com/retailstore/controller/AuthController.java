@@ -1,6 +1,8 @@
 package com.retailstore.controller;
 
+import com.retailstore.model.Store;
 import com.retailstore.model.User;
+import com.retailstore.repository.StoreRepository;
 import com.retailstore.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,19 +22,64 @@ public class AuthController {
     private UserRepository userRepository;
 
     @Autowired
+    private StoreRepository storeRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody User user) {
-        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+    public ResponseEntity<?> signup(@RequestBody Map<String, Object> body) {
+        String email = (String) body.get("email");
+        String password = (String) body.get("password");
+        String name = (String) body.get("name");
+        String role = (String) body.getOrDefault("role", "staff");
+        String avatar = (String) body.getOrDefault("avatar", "U");
+        String status = (String) body.getOrDefault("status", "pending");
+        String storeName = (String) body.get("storeName");
+        Number storeIdNum = (Number) body.get("storeId");
+
+        if (userRepository.findByEmail(email).isPresent()) {
             return ResponseEntity.badRequest().body("Email already in use");
         }
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setStatus("pending"); // Default for new users
-        if (user.getRole() == null) user.setRole("staff");
-        
+
+        User user = new User();
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(password));
+        user.setName(name);
+        user.setRole(role);
+        user.setAvatar(avatar);
+
+        if ("admin".equals(role)) {
+            // Admin signup: create store and auto-approve
+            user.setStatus("approved");
+
+            if (storeName != null && !storeName.trim().isEmpty()) {
+                Store store = new Store();
+                store.setName(storeName.trim());
+                store.setAdminEmail(email);
+                Store savedStore = storeRepository.save(store);
+                user.setStoreId(savedStore.getId());
+            }
+        } else {
+            // Manager/Staff signup: pending approval
+            user.setStatus(status);
+            if (storeIdNum != null) {
+                user.setStoreId(storeIdNum.longValue());
+            }
+        }
+
         User savedUser = userRepository.save(user);
-        return ResponseEntity.ok(savedUser);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", savedUser.getId());
+        response.put("name", savedUser.getName());
+        response.put("email", savedUser.getEmail());
+        response.put("role", savedUser.getRole());
+        response.put("avatar", savedUser.getAvatar());
+        response.put("storeId", savedUser.getStoreId());
+        response.put("status", savedUser.getStatus());
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
@@ -47,7 +94,13 @@ public class AuthController {
                 if ("rejected".equals(user.getStatus())) {
                     return ResponseEntity.status(403).body("Your account has been rejected.");
                 }
-                
+                if ("suspended".equals(user.getStatus())) {
+                    return ResponseEntity.status(403).body("Your account has been suspended. Contact your admin.");
+                }
+                if ("pending".equals(user.getStatus())) {
+                    return ResponseEntity.status(403).body("Your account is pending approval. Please wait for admin to approve.");
+                }
+
                 Map<String, Object> response = new HashMap<>();
                 response.put("name", user.getName());
                 response.put("email", user.getEmail());
@@ -55,7 +108,7 @@ public class AuthController {
                 response.put("avatar", user.getAvatar());
                 response.put("storeId", user.getStoreId());
                 response.put("status", user.getStatus());
-                
+
                 return ResponseEntity.ok(response);
             }
         }

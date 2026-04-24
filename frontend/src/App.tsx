@@ -76,7 +76,7 @@ function App() {
       case 'customer-lookup': return <CustomerLookup />;
       case 'inventory-alerts': return <InventoryAlerts />;
       case 'returns': return <Returns userRole={user.role} userName={user.name} />;
-      case 'user-management': return <UserManagement />;
+      case 'user-management': return <UserManagement user={user} />;
       case 'audit-logs': return <AuditLogs />;
       case 'suppliers': return <Suppliers />;
       case 'promotions': return <Promotions />;

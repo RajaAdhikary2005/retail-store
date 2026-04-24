@@ -1,14 +1,20 @@
 import { useState, useEffect } from 'react';
 import { Users, Shield, UserX } from 'lucide-react';
 import { fetchUsers } from '../services/api';
-import { ROLES, type UserRole } from '../services/auth';
+import { ROLES, type UserRole, type UserInfo } from '../services/auth';
 
 interface ManagedUser { id: number; name: string; email: string; role: UserRole; avatar: string; status: string; }
 
-export default function UserManagement() {
+interface UserManagementProps {
+  user?: UserInfo;
+}
+
+export default function UserManagement({ user }: UserManagementProps) {
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionMsg, setActionMsg] = useState<string | null>(null);
+
+  const currentUserEmail = user?.email || '';
 
   useEffect(() => {
     fetchUsers().then(data => {
@@ -38,7 +44,7 @@ export default function UserManagement() {
   };
 
   const toggleSuspend = (u: ManagedUser) => {
-    const next = u.status === 'active' ? 'suspended' : 'active';
+    const next = u.status === 'active' || u.status === 'approved' ? 'suspended' : 'active';
     updateUserStatus(u.id, next);
     flash(`${u.name} has been ${next === 'active' ? 'reactivated' : 'suspended'}.`);
   };
@@ -49,8 +55,10 @@ export default function UserManagement() {
 
   if (loading) return <div className="loading-spinner"><div className="spinner" /></div>;
 
-  const renderUserRow = (u: ManagedUser, isCurrentAdmin: boolean) => {
+  const renderUserRow = (u: ManagedUser) => {
     const r = ROLES[u.role] || ROLES.staff;
+    // Don't show suspend button for the currently logged-in user (themselves)
+    const isSelf = u.email.toLowerCase() === currentUserEmail.toLowerCase();
     return (
       <tr key={u.email} style={{ opacity: u.status === 'suspended' ? 0.5 : 1 }}>
         <td><div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -61,7 +69,7 @@ export default function UserManagement() {
           <div style={{ width: 6, height: 6, borderRadius: '50%', background: r.color }} />{r.label}</span></td>
         <td><span className="badge" style={{ background: u.status === 'approved' || u.status === 'active' ? 'var(--accent-green-light)' : u.status === 'pending' ? 'var(--accent-orange-light)' : 'var(--accent-red-light)', color: u.status === 'approved' || u.status === 'active' ? 'var(--accent-green)' : u.status === 'pending' ? 'var(--accent-orange)' : 'var(--accent-red)' }}>
           {u.status === 'approved' || u.status === 'active' ? '● Active' : u.status === 'pending' ? '◷ Pending' : '● ' + u.status}</span></td>
-        <td>{!isCurrentAdmin && (
+        <td>{!isSelf && (
           <div style={{ display: 'flex', gap: 4 }}>
             <button className={`btn btn-sm ${u.status === 'active' || u.status === 'approved' ? 'btn-secondary' : 'btn-success'}`} onClick={() => toggleSuspend(u)} style={{ padding: '4px 8px' }}>
               {u.status === 'active' || u.status === 'approved' ? <><UserX size={12} /> Suspend</> : <>✓ Reactivate</>}
@@ -87,7 +95,7 @@ export default function UserManagement() {
 
       <div className="card"><div className="card-header"><h3><Users size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />All Users</h3></div>
         <div className="card-body" style={{ padding: 0 }}><table className="data-table"><thead><tr><th>User</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
-          <tbody>{users.map(u => renderUserRow(u, u.role === 'admin' && admins.length <= 1))}</tbody></table></div></div>
+          <tbody>{users.map(u => renderUserRow(u))}</tbody></table></div></div>
     </>
   );
 }

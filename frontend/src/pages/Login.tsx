@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Eye, EyeOff, Store, CheckCircle } from 'lucide-react';
 import {
   USERS, ROLES,
-  type UserInfo, type UserRole,
-  isEmailPending, getStores,
+  type UserInfo, type UserRole, type Store as StoreType,
+  isEmailPending, fetchStoresFromApi,
   loginApi, signupApi,
 } from '../services/auth';
 
@@ -25,6 +25,21 @@ export default function Login({ onLogin }: LoginProps) {
   const [signupRole, setSignupRole] = useState<UserRole>('staff');
   const [storeName, setStoreName] = useState('');
   const [selectedStoreId, setSelectedStoreId] = useState<number>(0);
+
+  // Stores loaded from backend API
+  const [availableStores, setAvailableStores] = useState<StoreType[]>([]);
+  const [storesLoading, setStoresLoading] = useState(false);
+
+  // Fetch stores from API when switching to signup mode for manager/staff
+  useEffect(() => {
+    if (mode === 'signup' && (signupRole === 'manager' || signupRole === 'staff')) {
+      setStoresLoading(true);
+      fetchStoresFromApi().then(stores => {
+        setAvailableStores(stores);
+        setStoresLoading(false);
+      });
+    }
+  }, [mode, signupRole]);
 
   const resetForm = () => {
     setEmail('');
@@ -76,7 +91,8 @@ export default function Login({ onLogin }: LoginProps) {
           password,
           role: 'admin',
           avatar,
-          status: 'approved'
+          status: 'approved',
+          storeName: storeName.trim(),
         }).then(() => {
           return loginApi(email.toLowerCase(), password);
         }).then(user => {
@@ -103,7 +119,7 @@ export default function Login({ onLogin }: LoginProps) {
           storeId: selectedStoreId,
           status: 'pending'
         }).then(() => {
-          setSuccessMsg('REQUEST SUBMITTED YOU CAN LOGIN AFTER ADMIN APPROVES IT');
+          setSuccessMsg('REQUEST SUBMITTED! YOU CAN LOGIN AFTER ADMIN APPROVES IT.');
           resetForm();
         }).catch(err => {
           setError(err.message);
@@ -121,8 +137,6 @@ export default function Login({ onLogin }: LoginProps) {
         setError(err.message);
       });
   };
-
-  const availableStores = getStores();
 
   return (
     <div className="auth-page">
@@ -279,7 +293,15 @@ export default function Login({ onLogin }: LoginProps) {
                 <Store size={12} style={{ marginRight: 4, verticalAlign: 'middle' }} />
                 Select Store to Join
               </label>
-              {availableStores.length > 0 ? (
+              {storesLoading ? (
+                <div style={{
+                  padding: '12px 14px', background: 'var(--bg-primary)',
+                  borderRadius: 'var(--radius-sm)', fontSize: 12, color: 'var(--text-muted)',
+                  textAlign: 'center',
+                }}>
+                  Loading stores...
+                </div>
+              ) : availableStores.length > 0 ? (
                 <>
                   <select
                     className="form-select"

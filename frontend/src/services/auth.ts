@@ -137,10 +137,23 @@ export async function signupApi(data: any): Promise<any> {
   return await res.json();
 }
 
-// ---- Store Helpers ----
-let nextStoreId = 2;
-let nextRequestId = 1;
+// ---- Store Helpers (fetches from backend API) ----
 
+export async function fetchStoresFromApi(): Promise<Store[]> {
+  try {
+    const res = await fetch(`${API_BASE}/stores`);
+    if (res.ok) {
+      return await res.json();
+    }
+    console.warn('Failed to fetch stores from API');
+  } catch (err) {
+    console.warn('Error fetching stores:', err);
+  }
+  return [];
+}
+
+// Kept for backward compat but returns the in-memory array
+// Use fetchStoresFromApi() for real data
 export function getStores(): Store[] {
   return [...STORES];
 }
@@ -148,6 +161,9 @@ export function getStores(): Store[] {
 export function getStoresByAdmin(adminEmail: string): Store[] {
   return STORES.filter(s => s.adminEmail === adminEmail);
 }
+
+let nextStoreId = 2;
+let nextRequestId = 1;
 
 export function createStore(name: string, adminEmail: string): Store {
   const store: Store = {
