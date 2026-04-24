@@ -4,7 +4,7 @@ import { mockProducts, mockCustomers, mockOrders } from './mockData';
 // Simulated API delay for realistic UX
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
-const API_BASE = '/api';
+const API_BASE = 'https://retail-store-k6pr.onrender.com/api';
 
 // Helper to safely call API with fallback to mock data
 async function apiFetch<T>(path: string, fallback: () => T, delayMs = 400): Promise<T> {
