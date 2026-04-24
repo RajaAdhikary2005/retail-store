@@ -225,15 +225,31 @@ export default function TakeOrder({ userName }: Props) {
               </div>
             ) : (
               <>
-                <div style={{ position: 'relative' }}>
+                <div style={{ position: 'relative', zIndex: 50 }}>
                   <div className="search-bar">
                     <User size={16} />
                     <input type="text" placeholder="Search existing customer..." value={searchCustomer} onChange={e => setSearchCustomer(e.target.value)} />
                   </div>
                   {searchCustomer && filteredCustomers.length > 0 && (
-                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 8, zIndex: 10, maxHeight: 160, overflowY: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      background: '#fff',
+                      border: '1px solid var(--border-color)',
+                      borderTop: 'none',
+                      borderRadius: '0 0 8px 8px',
+                      zIndex: 100,
+                      maxHeight: 180,
+                      overflowY: 'auto',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                    }}>
                       {filteredCustomers.map(c => (
-                        <div key={c.id} style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border-color)', fontSize: 13 }}
+                        <div key={c.id}
+                          style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border-color)', fontSize: 13, transition: 'background 0.1s' }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(59,130,246,0.06)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                           onClick={() => { setSelectedCustomer(c); setCustomerName(c.name); setSearchCustomer(''); }}>
                           <strong>{c.name}</strong> <span style={{ color: 'var(--text-muted)' }}>({c.phone})</span>
                         </div>
@@ -241,9 +257,9 @@ export default function TakeOrder({ userName }: Props) {
                     </div>
                   )}
                 </div>
-                <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)' }}>Or enter name manually:</div>
-                <input className="form-input" type="text" placeholder="Customer name *" value={customerName} onChange={e => setCustomerName(e.target.value)} style={{ marginTop: 4, fontSize: 13 }} />
-                <button className="btn btn-sm btn-secondary" style={{ marginTop: 8, fontSize: 11, gap: 4 }} onClick={() => setShowNewCustomer(true)}>
+                <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)', position: 'relative', zIndex: 1 }}>Or enter name manually:</div>
+                <input className="form-input" type="text" placeholder="Customer name *" value={customerName} onChange={e => setCustomerName(e.target.value)} style={{ marginTop: 4, fontSize: 13, position: 'relative', zIndex: 1 }} />
+                <button className="btn btn-sm btn-secondary" style={{ marginTop: 8, fontSize: 11, gap: 4, position: 'relative', zIndex: 1 }} onClick={() => setShowNewCustomer(true)}>
                   <UserPlus size={12} /> Add New Customer
                 </button>
               </>
