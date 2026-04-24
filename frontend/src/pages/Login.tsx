@@ -3,7 +3,7 @@ import { Eye, EyeOff, Store, CheckCircle } from 'lucide-react';
 import {
   USERS, ROLES,
   type UserInfo, type UserRole,
-  createStore, submitSignupRequest, isEmailPending, getStores,
+  isEmailPending, getStores,
   loginApi, signupApi,
 } from '../services/auth';
 

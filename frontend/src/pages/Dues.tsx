@@ -4,10 +4,11 @@ import { fetchDues, createDue, exportToCSV, type Due } from '../services/api';
 import { type UserRole, ROLES } from '../services/auth';
 
 interface DuesProps {
-  user: { role: UserRole };
+  userRole: UserRole;
 }
 
-export default function Dues({ user }: DuesProps) {
+export default function Dues({ userRole }: DuesProps) {
+  const user = { role: userRole };
   const [tab, setTab] = useState<'supplier' | 'customer'>('customer');
   const [search, setSearch] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);

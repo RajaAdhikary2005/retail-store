@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Tag, Plus, Percent, Calendar, Copy, Trash2, X, Clock, CheckCircle } from 'lucide-react';
+import { Plus, Copy, Trash2, X, Clock, CheckCircle } from 'lucide-react';
 import { fetchPromotions, createPromotion, type Promotion } from '../services/api';
 
 export default function Promotions() {
   const [promos, setPromos] = useState<Promotion[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ 
     name: '', 

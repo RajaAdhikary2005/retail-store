@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Phone, Mail, MapPin, ShoppingBag, Star, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Star, ChevronDown, ChevronUp } from 'lucide-react';
 import { fetchCustomers, fetchOrders } from '../services/api';
 import type { Customer, Order } from '../types';
 
@@ -18,7 +18,7 @@ export default function CustomerLookup() {
 
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);

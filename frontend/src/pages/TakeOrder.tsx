@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect } from 'react';
-import { Search, Plus, Minus, Trash2, ShoppingCart, User, Tag, CheckCircle, XCircle, Star, UserPlus, FileText, X } from 'lucide-react';
-import { fetchProducts, fetchCustomers, createOrder, createCustomer, findPromoByCode } from '../services/api';
+import { useState, useEffect } from 'react';
+import { Search, Plus, Minus, Trash2, User, CheckCircle, X } from 'lucide-react';
+import { fetchProducts, fetchCustomers, createOrder, findPromoByCode } from '../services/api';
 import type { Product, Customer } from '../types';
 
 interface Props {
@@ -15,7 +15,7 @@ interface CartItem {
   quantity: number;
 }
 
-export default function TakeOrder({ userName }: Props) {
+export default function TakeOrder({ userName: _userName }: Props) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchProduct, setSearchProduct] = useState('');
   const [searchCustomer, setSearchCustomer] = useState('');
@@ -34,7 +34,7 @@ export default function TakeOrder({ userName }: Props) {
 
   const filteredProducts = products.filter(p => 
     p.name.toLowerCase().includes(searchProduct.toLowerCase()) ||
-    p.sku.toLowerCase().includes(searchProduct.toLowerCase())
+    (p.sku || '').toLowerCase().includes(searchProduct.toLowerCase())
   );
 
   const filteredCustomers = customers.filter(c => 

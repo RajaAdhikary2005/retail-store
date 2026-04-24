@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Shield, UserX, ArrowUpCircle, Trash2 } from 'lucide-react';
+import { Users, Shield, UserX } from 'lucide-react';
 import { fetchUsers } from '../services/api';
 import { ROLES, type UserRole } from '../services/auth';
 

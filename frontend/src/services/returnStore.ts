@@ -25,13 +25,13 @@ import { logAction } from './api';
 
 export function addReturn(ret: ReturnItem) {
   RETURNS.unshift(ret);
-  logAction('System User', 'Submitted return request', `Order #${ret.orderId}`, 'info', 'Package');
+  logAction({ user: 'System User', action: 'Submitted return request', target: `Order #${ret.orderId}`, severity: 'info', iconStr: 'Package' });
 }
 
 export function updateReturnStatus(id: number, status: ReturnItem['status']) {
   const ret = RETURNS.find(r => r.id === id);
   if (ret) {
     ret.status = status;
-    logAction('System User', 'Updated return status', `Return #${id} → ${status}`, 'warning', 'Edit');
+    logAction({ user: 'System User', action: 'Updated return status', target: `Return #${id} → ${status}`, severity: 'warning', iconStr: 'Edit' });
   }
 }

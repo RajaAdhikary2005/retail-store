@@ -218,7 +218,7 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
 export async function fetchAnalytics(): Promise<AnalyticsData> {
   // Build analytics from real data
   try {
-    const [products, orders, customers] = await Promise.all([
+    const [products, orders, _customers] = await Promise.all([
       fetchProducts(), fetchOrders(), fetchCustomers()
     ]);
 
@@ -288,7 +288,7 @@ export async function fetchAnalytics(): Promise<AnalyticsData> {
         productId: p.id,
         productName: p.name,
         currentStock: p.stockQuantity,
-        status: p.stockQuantity <= 5 ? 'Critical' : 'Low'
+        status: (p.stockQuantity <= 5 ? 'Critical' : 'Low') as 'Critical' | 'Low'
       }));
 
     return { salesTrends, topProducts, categoryDistribution, topCustomers, monthlyRevenue, inventoryAlerts };

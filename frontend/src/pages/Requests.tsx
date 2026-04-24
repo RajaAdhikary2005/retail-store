@@ -7,7 +7,7 @@ interface RequestsProps {
   user: UserInfo;
 }
 
-export default function Requests({ user }: RequestsProps) {
+export default function Requests(_props: RequestsProps) {
   const [pendingUsers, setPendingUsers] = useState<any[]>([]);
   const [processedUsers, setProcessedUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

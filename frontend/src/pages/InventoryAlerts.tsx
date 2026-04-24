@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { AlertTriangle, Package, TrendingDown, Archive, X } from 'lucide-react';
+import { AlertTriangle, Package, TrendingDown } from 'lucide-react';
 import { fetchProducts } from '../services/api';
 import type { Product } from '../types';
 
 export default function InventoryAlerts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [filter, setFilter] = useState('all');
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);

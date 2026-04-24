@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { RotateCcw, CheckCircle, XCircle, Clock, Plus, X } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Plus, X } from 'lucide-react';
 import { fetchOrders, fetchReturns, createReturn, type ReturnRequest } from '../services/api';
 import type { Order } from '../types';
 import { type UserRole } from '../services/auth';
@@ -8,10 +8,10 @@ const reasons = ['Defective', 'Wrong item', 'Changed mind', 'Not as described', 
 
 interface Props { userRole: UserRole; userName?: string; }
 
-export default function Returns({ userRole, userName = 'User' }: Props) {
+export default function Returns({ userName: _userName = 'User' }: Props) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [returns, setReturns] = useState<ReturnRequest[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   
   const [showModal, setShowModal] = useState(false);
   const [selOrderId, setSelOrderId] = useState(0);

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FileText, AlertTriangle, Info, Shield, Edit, Trash2, Plus, LogIn, LogOut, Settings, Clock } from 'lucide-react';
+import { FileText, Shield, Edit, Trash2, Plus, LogIn, LogOut, Settings, Clock } from 'lucide-react';
 import { fetchAuditLogs, type LogEntry } from '../services/api';
 
 const ICONS: Record<string, React.ReactNode> = {

@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Truck, Plus, Edit, Trash2, Package, Phone, Mail, MapPin, FileText, Clock, CheckCircle, X } from 'lucide-react';
-import { fetchSuppliers, createSupplier, type Supplier, fetchProducts, fetchPOs, createPO, type PurchaseOrder } from '../services/api';
+import { Truck, Plus, Edit, Trash2, FileText, Clock, CheckCircle, X } from 'lucide-react';
+import { fetchSuppliers, createSupplier, type Supplier, fetchProducts, fetchPOs, type PurchaseOrder } from '../services/api';
 import type { Product } from '../types';
 
 export default function Suppliers() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [_products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'suppliers' | 'orders'>('suppliers');
   
   const [, forceUpdate] = useState(0);
@@ -24,9 +24,9 @@ export default function Suppliers() {
   }, [forceUpdate]);
 
   const [showModal, setShowModal] = useState(false);
-  const [showPOModal, setShowPOModal] = useState(false);
+  const [_showPOModal, setShowPOModal] = useState(false);
   const [form, setForm] = useState({ name: '', contactPerson: '', email: '', phone: '', category: '' });
-  const [poForm, setPoForm] = useState({ supplierId: 0, supplierName: '', productNames: '', totalAmount: 0 });
+  const [_poForm, _setPoForm] = useState({ supplierId: 0, supplierName: '', productNames: '', totalAmount: 0 });
 
   const handleSaveSupplier = () => {
     createSupplier(form).then(() => {
@@ -35,12 +35,7 @@ export default function Suppliers() {
     });
   };
 
-  const handleCreatePO = () => {
-    createPO({ ...poForm, status: 'Pending' }).then(() => {
-      setShowPOModal(false);
-      refresh();
-    });
-  };
+
 
   const statusBadge = (status: string) => (
     <span className={`badge badge-${status.toLowerCase()}`}>
