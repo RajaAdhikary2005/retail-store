@@ -5,7 +5,7 @@ import type { Product } from '../types';
 
 export default function Suppliers() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [_products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'suppliers' | 'orders'>('suppliers');
@@ -22,20 +22,34 @@ export default function Suppliers() {
   // Supplier form
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ name: '', contactPerson: '', email: '', phone: '', category: '' });
+  const [supplierMsg, setSupplierMsg] = useState<string | null>(null);
 
   // PO form
   const [showPOModal, setShowPOModal] = useState(false);
-  const [poForm, setPoForm] = useState({ supplierId: 0, productNames: '', totalAmount: 0 });
+  const [poSupplierId, setPoSupplierId] = useState(0);
+  const [poSelectedProducts, setPoSelectedProducts] = useState<number[]>([]);
+  const [poTotalAmount, setPoTotalAmount] = useState(0);
   const [poMsg, setPoMsg] = useState<string | null>(null);
 
   const handleSaveSupplier = async () => {
     if (!form.name.trim()) return;
+    setSupplierMsg(null);
     try {
-      await createSupplier({ ...form, status: 'Active' });
-      setShowModal(false);
-      setForm({ name: '', contactPerson: '', email: '', phone: '', category: '' });
-      loadData();
-    } catch { /* ignore */ }
+      const result = await createSupplier({ ...form, status: 'Active' });
+      if (result && result.id) {
+        setSupplierMsg('✓ Supplier created!');
+        setTimeout(() => {
+          setShowModal(false);
+          setForm({ name: '', contactPerson: '', email: '', phone: '', category: '' });
+          setSupplierMsg(null);
+          loadData();
+        }, 1200);
+      } else {
+        setSupplierMsg('Failed to create supplier');
+      }
+    } catch {
+      setSupplierMsg('Failed to create supplier — server error');
+    }
   };
 
   const handleDeleteSupplier = async (id: number) => {
@@ -46,20 +60,31 @@ export default function Suppliers() {
     } catch { /* ignore */ }
   };
 
+  const toggleProduct = (pid: number) => {
+    setPoSelectedProducts(prev =>
+      prev.includes(pid) ? prev.filter(id => id !== pid) : [...prev, pid]
+    );
+  };
+
+  const selectedProductNames = poSelectedProducts
+    .map(id => products.find(p => p.id === id)?.name || '')
+    .filter(Boolean)
+    .join(', ');
+
   const handleCreatePO = async () => {
-    if (!poForm.supplierId || !poForm.productNames.trim() || poForm.totalAmount <= 0) return;
-    const supplier = suppliers.find(s => s.id === poForm.supplierId);
+    if (!poSupplierId || poSelectedProducts.length === 0 || poTotalAmount <= 0) return;
+    const supplier = suppliers.find(s => s.id === poSupplierId);
     try {
       await createPO({
-        supplierId: poForm.supplierId,
+        supplierId: poSupplierId,
         supplierName: supplier?.name || '',
-        productNames: poForm.productNames,
-        totalAmount: poForm.totalAmount,
+        productNames: selectedProductNames,
+        totalAmount: poTotalAmount,
         status: 'Pending',
         orderDate: new Date().toISOString(),
       });
       setPoMsg('✓ Purchase Order created!');
-      setTimeout(() => { setShowPOModal(false); setPoMsg(null); loadData(); }, 1500);
+      setTimeout(() => { setShowPOModal(false); setPoMsg(null); setPoSelectedProducts([]); setPoTotalAmount(0); loadData(); }, 1500);
     } catch {
       setPoMsg('Failed to create PO');
     }
@@ -89,10 +114,10 @@ export default function Suppliers() {
         <div className="card-header">
           <div className="tabs">
             <button className={`tab ${tab === 'suppliers' ? 'active' : ''}`} onClick={() => setTab('suppliers')}>
-              <Truck size={16} /> Suppliers
+              <Truck size={16} /> Suppliers ({suppliers.length})
             </button>
             <button className={`tab ${tab === 'orders' ? 'active' : ''}`} onClick={() => setTab('orders')}>
-              <FileText size={16} /> Purchase Orders
+              <FileText size={16} /> Purchase Orders ({orders.length})
             </button>
           </div>
         </div>
@@ -117,7 +142,7 @@ export default function Suppliers() {
                     </td>
                   </tr>
                 ))}
-                {suppliers.length === 0 && <tr><td colSpan={8} style={{ textAlign: 'center', padding: 30, color: 'var(--text-muted)' }}>No suppliers yet.</td></tr>}
+                {suppliers.length === 0 && <tr><td colSpan={8} style={{ textAlign: 'center', padding: 30, color: 'var(--text-muted)' }}>No suppliers yet. Click "Add Supplier" to create one.</td></tr>}
               </tbody>
             </table>
           ) : (
@@ -147,7 +172,7 @@ export default function Suppliers() {
           <div className="modal-content">
             <div className="modal-header">
               <h3>Add New Supplier</h3>
-              <button className="close-btn" onClick={() => setShowModal(false)}><X size={20} /></button>
+              <button className="close-btn" onClick={() => { setShowModal(false); setSupplierMsg(null); }}><X size={20} /></button>
             </div>
             <div className="modal-body">
               <div className="form-group">
@@ -156,7 +181,7 @@ export default function Suppliers() {
               </div>
               <div className="form-group">
                 <label className="form-label">Contact Person</label>
-                <input className="form-input" type="text" value={form.contactPerson} onChange={e => setForm({...form, contactPerson: e.target.value})} />
+                <input className="form-input" type="text" value={form.contactPerson} onChange={e => setForm({...form, contactPerson: e.target.value})} placeholder="Contact name" />
               </div>
               <div style={{ display: 'flex', gap: 12 }}>
                 <div className="form-group" style={{ flex: 1 }}>
@@ -170,10 +195,17 @@ export default function Suppliers() {
               </div>
               <div className="form-group">
                 <label className="form-label">Category</label>
-                <input className="form-input" type="text" value={form.category} onChange={e => setForm({...form, category: e.target.value})} placeholder="e.g. Electronics, Food" />
+                <input className="form-input" type="text" value={form.category} onChange={e => setForm({...form, category: e.target.value})} placeholder="e.g. Electronics, Food, Dairy" />
               </div>
-              <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
-                <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setShowModal(false)}>Cancel</button>
+              {supplierMsg && (
+                <div style={{ padding: '8px 12px', borderRadius: 8, fontSize: 12, fontWeight: 500, marginBottom: 8,
+                  background: supplierMsg.startsWith('✓') ? 'var(--accent-green-light)' : 'var(--accent-red-light)',
+                  color: supplierMsg.startsWith('✓') ? 'var(--accent-green)' : 'var(--accent-red)' }}>
+                  {supplierMsg}
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+                <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => { setShowModal(false); setSupplierMsg(null); }}>Cancel</button>
                 <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleSaveSupplier} disabled={!form.name.trim()}>Save Supplier</button>
               </div>
             </div>
@@ -184,27 +216,46 @@ export default function Suppliers() {
       {/* New PO Modal */}
       {showPOModal && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: 440 }}>
+          <div className="modal-content" style={{ maxWidth: 500 }}>
             <div className="modal-header">
               <h3>Create Purchase Order</h3>
-              <button className="close-btn" onClick={() => { setShowPOModal(false); setPoMsg(null); }}><X size={20} /></button>
+              <button className="close-btn" onClick={() => { setShowPOModal(false); setPoMsg(null); setPoSelectedProducts([]); }}><X size={20} /></button>
             </div>
             <div className="modal-body">
               <div className="form-group">
                 <label className="form-label">Supplier *</label>
-                <select className="form-select" value={poForm.supplierId} onChange={e => setPoForm({...poForm, supplierId: Number(e.target.value)})}>
+                <select className="form-select" value={poSupplierId} onChange={e => setPoSupplierId(Number(e.target.value))}>
                   <option value={0}>— Select Supplier —</option>
                   {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
               </div>
+
               <div className="form-group">
-                <label className="form-label">Products *</label>
-                <input className="form-input" type="text" value={poForm.productNames} onChange={e => setPoForm({...poForm, productNames: e.target.value})} placeholder="e.g. eggs, rice, sugar" />
+                <label className="form-label">Select Products *</label>
+                <div style={{ border: '1px solid var(--border-color)', borderRadius: 8, maxHeight: 180, overflowY: 'auto', padding: 8 }}>
+                  {products.length === 0 && <div style={{ color: 'var(--text-muted)', fontSize: 12, padding: 8 }}>No products available</div>}
+                  {products.map(p => (
+                    <label key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 6, cursor: 'pointer',
+                      background: poSelectedProducts.includes(p.id) ? 'var(--accent-blue-light, rgba(59,130,246,0.08))' : 'transparent' }}>
+                      <input type="checkbox" checked={poSelectedProducts.includes(p.id)} onChange={() => toggleProduct(p.id)}
+                        style={{ accentColor: 'var(--accent-blue)' }} />
+                      <span style={{ flex: 1, fontSize: 13, fontWeight: poSelectedProducts.includes(p.id) ? 600 : 400 }}>{p.name}</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>₹{p.price} • Stock: {p.stockQuantity}</span>
+                    </label>
+                  ))}
+                </div>
+                {poSelectedProducts.length > 0 && (
+                  <div style={{ fontSize: 11, color: 'var(--accent-blue)', marginTop: 4 }}>
+                    Selected: {selectedProductNames}
+                  </div>
+                )}
               </div>
+
               <div className="form-group">
                 <label className="form-label">Total Amount (₹) *</label>
-                <input className="form-input" type="number" value={poForm.totalAmount || ''} onChange={e => setPoForm({...poForm, totalAmount: Number(e.target.value)})} min={1} />
+                <input className="form-input" type="number" value={poTotalAmount || ''} onChange={e => setPoTotalAmount(Number(e.target.value))} min={1} />
               </div>
+
               {poMsg && (
                 <div style={{ padding: '8px 12px', borderRadius: 8, fontSize: 12, fontWeight: 500, marginBottom: 12,
                   background: poMsg.startsWith('✓') ? 'var(--accent-green-light)' : 'var(--accent-red-light)',
@@ -213,9 +264,9 @@ export default function Suppliers() {
                 </div>
               )}
               <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
-                <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => { setShowPOModal(false); setPoMsg(null); }}>Cancel</button>
+                <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => { setShowPOModal(false); setPoMsg(null); setPoSelectedProducts([]); }}>Cancel</button>
                 <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleCreatePO}
-                  disabled={!poForm.supplierId || !poForm.productNames.trim() || poForm.totalAmount <= 0}>
+                  disabled={!poSupplierId || poSelectedProducts.length === 0 || poTotalAmount <= 0}>
                   Create PO
                 </button>
               </div>
