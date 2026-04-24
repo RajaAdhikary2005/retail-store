@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AlertTriangle, Package, TrendingDown, Archive, X } from 'lucide-react';
-import { fetchProducts, type Product } from '../services/api';
+import { fetchProducts } from '../services/api';
+import type { Product } from '../types';
 
 export default function InventoryAlerts() {
   const [products, setProducts] = useState<Product[]>([]);

@@ -1,52 +1,56 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Users, Shield, UserX, ArrowUpCircle, Trash2 } from 'lucide-react';
-import { USERS, ROLES, type UserInfo, type UserRole } from '../services/auth';
+import { fetchUsers } from '../services/api';
+import { ROLES, type UserRole } from '../services/auth';
 
-interface ManagedUser extends UserInfo { status: 'active' | 'suspended'; }
+interface ManagedUser { id: number; name: string; email: string; role: UserRole; avatar: string; status: string; }
 
 export default function UserManagement() {
-  const [users, setUsers] = useState<ManagedUser[]>(() =>
-    Object.values(USERS).map(u => ({ ...u.user, status: 'active' as const }))
-  );
+  const [users, setUsers] = useState<ManagedUser[]>([]);
+  const [loading, setLoading] = useState(true);
   const [actionMsg, setActionMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchUsers().then(data => {
+      setUsers(data.map((u: any) => ({
+        id: u.id,
+        name: u.name || 'Unknown',
+        email: u.email,
+        role: u.role || 'staff',
+        avatar: u.avatar || (u.name || 'U').substring(0, 2).toUpperCase(),
+        status: u.status || 'active'
+      })));
+      setLoading(false);
+    });
+  }, []);
 
   const flash = (msg: string) => { setActionMsg(msg); setTimeout(() => setActionMsg(null), 3000); };
 
-  const toggleSuspend = (email: string) => {
-    setUsers(prev => prev.map(u => {
-      if (u.email === email) {
-        const next = u.status === 'active' ? 'suspended' : 'active';
-        flash(`${u.name} has been ${next === 'active' ? 'reactivated' : 'suspended'}.`);
-        return { ...u, status: next as 'active' | 'suspended' };
-      }
-      return u;
-    }));
+  const updateUserStatus = async (id: number, status: string) => {
+    try {
+      await fetch(`https://retail-store-k6pr.onrender.com/api/auth/users/${id}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      setUsers(prev => prev.map(u => u.id === id ? { ...u, status } : u));
+    } catch {}
   };
 
-  const promote = (email: string) => {
-    setUsers(prev => prev.map(u => {
-      if (u.email === email && u.role === 'staff') {
-        flash(`${u.name} has been promoted to Manager.`);
-        return { ...u, role: 'manager' as UserRole };
-      }
-      return u;
-    }));
-  };
-
-  const removeUser = (email: string) => {
-    const user = users.find(u => u.email === email);
-    if (user) {
-      flash(`${user.name}'s access has been revoked.`);
-      setUsers(prev => prev.filter(u => u.email !== email));
-    }
+  const toggleSuspend = (u: ManagedUser) => {
+    const next = u.status === 'active' ? 'suspended' : 'active';
+    updateUserStatus(u.id, next);
+    flash(`${u.name} has been ${next === 'active' ? 'reactivated' : 'suspended'}.`);
   };
 
   const admins = users.filter(u => u.role === 'admin');
   const managers = users.filter(u => u.role === 'manager');
   const staff = users.filter(u => u.role === 'staff');
 
+  if (loading) return <div className="loading-spinner"><div className="spinner" /></div>;
+
   const renderUserRow = (u: ManagedUser, isCurrentAdmin: boolean) => {
-    const r = ROLES[u.role];
+    const r = ROLES[u.role] || ROLES.staff;
     return (
       <tr key={u.email} style={{ opacity: u.status === 'suspended' ? 0.5 : 1 }}>
         <td><div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -55,15 +59,13 @@ export default function UserManagement() {
         </div></td>
         <td><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, background: `${r.color}15`, color: r.color, border: `1px solid ${r.color}25` }}>
           <div style={{ width: 6, height: 6, borderRadius: '50%', background: r.color }} />{r.label}</span></td>
-        <td><span className="badge" style={{ background: u.status === 'active' ? 'var(--accent-green-light)' : 'var(--accent-red-light)', color: u.status === 'active' ? 'var(--accent-green)' : 'var(--accent-red)' }}>
-          {u.status === 'active' ? '● Active' : '● Suspended'}</span></td>
+        <td><span className="badge" style={{ background: u.status === 'approved' || u.status === 'active' ? 'var(--accent-green-light)' : u.status === 'pending' ? 'var(--accent-orange-light)' : 'var(--accent-red-light)', color: u.status === 'approved' || u.status === 'active' ? 'var(--accent-green)' : u.status === 'pending' ? 'var(--accent-orange)' : 'var(--accent-red)' }}>
+          {u.status === 'approved' || u.status === 'active' ? '● Active' : u.status === 'pending' ? '◷ Pending' : '● ' + u.status}</span></td>
         <td>{!isCurrentAdmin && (
           <div style={{ display: 'flex', gap: 4 }}>
-            <button className={`btn btn-sm ${u.status === 'active' ? 'btn-secondary' : 'btn-success'}`} onClick={() => toggleSuspend(u.email)} title={u.status === 'active' ? 'Suspend' : 'Reactivate'} style={{ padding: '4px 8px' }}>
-              {u.status === 'active' ? <><UserX size={12} /> Suspend</> : <>✓ Reactivate</>}
+            <button className={`btn btn-sm ${u.status === 'active' || u.status === 'approved' ? 'btn-secondary' : 'btn-success'}`} onClick={() => toggleSuspend(u)} style={{ padding: '4px 8px' }}>
+              {u.status === 'active' || u.status === 'approved' ? <><UserX size={12} /> Suspend</> : <>✓ Reactivate</>}
             </button>
-            {u.role === 'staff' && <button className="btn btn-sm btn-primary" onClick={() => promote(u.email)} title="Promote to Manager" style={{ padding: '4px 8px' }}><ArrowUpCircle size={12} /> Promote</button>}
-            {u.role !== 'admin' && <button className="btn btn-sm btn-danger" onClick={() => removeUser(u.email)} title="Remove access" style={{ padding: '4px 8px' }}><Trash2 size={12} /></button>}
           </div>
         )}</td>
       </tr>
@@ -74,7 +76,7 @@ export default function UserManagement() {
     <>
       <div className="page-header"><h2>User & Staff Management</h2><p>Manage all user accounts, permissions, and access levels.</p></div>
 
-      {actionMsg && <div style={{ padding: '12px 16px', marginBottom: 20, borderRadius: 'var(--radius-sm)', background: 'var(--accent-green-light)', color: 'var(--accent-green)', fontSize: 13, fontWeight: 500, animation: 'slideUp 0.25s ease' }}>✓ {actionMsg}</div>}
+      {actionMsg && <div style={{ padding: '12px 16px', marginBottom: 20, borderRadius: 'var(--radius-sm)', background: 'var(--accent-green-light)', color: 'var(--accent-green)', fontSize: 13, fontWeight: 500 }}>✓ {actionMsg}</div>}
 
       <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
         <div className="stat-card"><div className="stat-info"><h4>Total Users</h4><div className="stat-value">{users.length}</div></div><div className="stat-icon blue"><Users size={22} /></div></div>

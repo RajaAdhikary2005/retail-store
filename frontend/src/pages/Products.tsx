@@ -3,7 +3,6 @@ import { Plus, Search, Edit2, Trash2, Download, X, ChevronLeft, ChevronRight, Lo
 import { fetchProducts, deleteProduct, exportToCSV, createProduct, updateProduct } from '../services/api';
 import type { Product } from '../types';
 import { type UserRole, canEditModule, canDeleteInModule, ROLES } from '../services/auth';
-import { getPendingPOQuantity } from '../services/poStore';
 
 export default function Products({ globalSearch = '', userRole = 'admin' as UserRole }: { globalSearch?: string; userRole?: UserRole }) {
   const canEdit = canEditModule(userRole, 'products');
@@ -59,7 +58,7 @@ export default function Products({ globalSearch = '', userRole = 'admin' as User
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     const data = {
-      name: fd.get('name') as string, category: fd.get('category') as string,
+      name: fd.get('name') as string, categoryName: fd.get('category') as string,
       price: parseFloat(fd.get('price') as string), stockQuantity: parseInt(fd.get('stockQuantity') as string),
     };
     if (editProduct) {
@@ -116,11 +115,6 @@ export default function Products({ globalSearch = '', userRole = 'admin' as User
                     <span style={{ color: p.stockQuantity === 0 ? 'var(--accent-red)' : p.stockQuantity < 10 ? 'var(--accent-orange)' : 'var(--accent-green)', fontWeight: 600 }}>
                       {p.stockQuantity}
                     </span>
-                    {getPendingPOQuantity(p.id) > 0 && (
-                      <span style={{ marginLeft: 8, fontSize: 10, background: 'var(--accent-blue-light)', color: 'var(--accent-blue)', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>
-                        +{getPendingPOQuantity(p.id)} on PO
-                      </span>
-                    )}
                   </td>
                   <td>
                     <div style={{ display: 'flex', gap: 6 }}>
