@@ -1,7 +1,6 @@
 package com.retailstore.model;
 
 import jakarta.persistence.*;
-import java.util.List;
 
 @Entity
 @Table(name = "suppliers")
@@ -16,11 +15,13 @@ public class Supplier {
     private String phone;
     private String category;
     
-    @ElementCollection
-    private List<String> productCategories;
-    
+    @Column(columnDefinition = "DOUBLE DEFAULT 0")
     private Double totalOrdersValue = 0.0;
+    
+    @Column(columnDefinition = "INT DEFAULT 0")
     private Integer pendingDeliveries = 0;
+    
+    @Column(columnDefinition = "VARCHAR(50) DEFAULT 'Active'")
     private String status = "Active";
 
     public Supplier() {}
@@ -37,8 +38,6 @@ public class Supplier {
     public void setPhone(String phone) { this.phone = phone; }
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
-    public List<String> getProductCategories() { return productCategories; }
-    public void setProductCategories(List<String> productCategories) { this.productCategories = productCategories; }
     public Double getTotalOrdersValue() { return totalOrdersValue; }
     public void setTotalOrdersValue(Double totalOrdersValue) { this.totalOrdersValue = totalOrdersValue; }
     public Integer getPendingDeliveries() { return pendingDeliveries; }

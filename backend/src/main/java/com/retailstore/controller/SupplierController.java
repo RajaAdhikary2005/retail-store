@@ -6,9 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/suppliers")
@@ -23,19 +21,11 @@ public class SupplierController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createSupplier(@RequestBody Map<String, Object> body) {
+    public ResponseEntity<?> createSupplier(@RequestBody Supplier supplier) {
         try {
-            Supplier supplier = new Supplier();
-            supplier.setName((String) body.getOrDefault("name", ""));
-            supplier.setContactPerson((String) body.getOrDefault("contactPerson", ""));
-            supplier.setEmail((String) body.getOrDefault("email", ""));
-            supplier.setPhone((String) body.getOrDefault("phone", ""));
-            supplier.setCategory((String) body.getOrDefault("category", ""));
-            supplier.setStatus((String) body.getOrDefault("status", "Active"));
-            supplier.setProductCategories(new ArrayList<>());
-            supplier.setTotalOrdersValue(0.0);
-            supplier.setPendingDeliveries(0);
-
+            if (supplier.getStatus() == null) supplier.setStatus("Active");
+            if (supplier.getTotalOrdersValue() == null) supplier.setTotalOrdersValue(0.0);
+            if (supplier.getPendingDeliveries() == null) supplier.setPendingDeliveries(0);
             Supplier saved = supplierRepository.save(supplier);
             return new ResponseEntity<>(saved, HttpStatus.CREATED);
         } catch (Exception e) {
@@ -45,7 +35,13 @@ public class SupplierController {
     }
     
     @DeleteMapping("/{id}")
-    public void deleteSupplier(@PathVariable Long id) {
-        supplierRepository.deleteById(id);
+    public ResponseEntity<?> deleteSupplier(@PathVariable Long id) {
+        try {
+            supplierRepository.deleteById(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to delete supplier: " + e.getMessage());
+        }
     }
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Truck, Plus, Trash2, FileText, Clock, CheckCircle, X } from 'lucide-react';
+import { Truck, Plus, Trash2, FileText, Clock, CheckCircle, X, Check } from 'lucide-react';
 import { fetchSuppliers, createSupplier, deleteSupplier, type Supplier, fetchProducts, fetchPOs, createPO, type PurchaseOrder } from '../services/api';
 import type { Product } from '../types';
 
@@ -7,7 +7,7 @@ export default function Suppliers() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'suppliers' | 'orders'>('suppliers');
 
   const loadData = () => {
@@ -23,6 +23,7 @@ export default function Suppliers() {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ name: '', contactPerson: '', email: '', phone: '', category: '' });
   const [supplierMsg, setSupplierMsg] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   // PO form
   const [showPOModal, setShowPOModal] = useState(false);
@@ -33,22 +34,30 @@ export default function Suppliers() {
 
   const handleSaveSupplier = async () => {
     if (!form.name.trim()) return;
+    setSaving(true);
     setSupplierMsg(null);
     try {
-      const result = await createSupplier({ ...form, status: 'Active' });
-      if (result && result.id) {
-        setSupplierMsg('✓ Supplier created!');
-        setTimeout(() => {
-          setShowModal(false);
-          setForm({ name: '', contactPerson: '', email: '', phone: '', category: '' });
-          setSupplierMsg(null);
-          loadData();
-        }, 1200);
-      } else {
-        setSupplierMsg('Failed to create supplier');
-      }
-    } catch {
-      setSupplierMsg('Failed to create supplier — server error');
+      await createSupplier({
+        name: form.name.trim(),
+        contactPerson: form.contactPerson.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        category: form.category.trim(),
+        status: 'Active',
+        totalOrdersValue: 0,
+        pendingDeliveries: 0
+      });
+      setSupplierMsg('✓ Supplier created successfully!');
+      setTimeout(() => {
+        setShowModal(false);
+        setForm({ name: '', contactPerson: '', email: '', phone: '', category: '' });
+        setSupplierMsg(null);
+        loadData();
+      }, 1200);
+    } catch (err: any) {
+      setSupplierMsg(`✗ ${err?.message || 'Failed to create supplier'}`);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -84,9 +93,9 @@ export default function Suppliers() {
         orderDate: new Date().toISOString(),
       });
       setPoMsg('✓ Purchase Order created!');
-      setTimeout(() => { setShowPOModal(false); setPoMsg(null); setPoSelectedProducts([]); setPoTotalAmount(0); loadData(); }, 1500);
+      setTimeout(() => { setShowPOModal(false); setPoMsg(null); setPoSelectedProducts([]); setPoTotalAmount(0); setPoSupplierId(0); loadData(); }, 1500);
     } catch {
-      setPoMsg('Failed to create PO');
+      setPoMsg('✗ Failed to create PO');
     }
   };
 
@@ -96,8 +105,6 @@ export default function Suppliers() {
       {status}
     </span>
   );
-
-  if (loading) return <div className="loading-spinner"><div className="spinner" /></div>;
 
   return (
     <>
@@ -168,8 +175,8 @@ export default function Suppliers() {
 
       {/* Add Supplier Modal */}
       {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
+        <div className="modal-overlay" onClick={() => { setShowModal(false); setSupplierMsg(null); }}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Add New Supplier</h3>
               <button className="close-btn" onClick={() => { setShowModal(false); setSupplierMsg(null); }}><X size={20} /></button>
@@ -198,15 +205,17 @@ export default function Suppliers() {
                 <input className="form-input" type="text" value={form.category} onChange={e => setForm({...form, category: e.target.value})} placeholder="e.g. Electronics, Food, Dairy" />
               </div>
               {supplierMsg && (
-                <div style={{ padding: '8px 12px', borderRadius: 8, fontSize: 12, fontWeight: 500, marginBottom: 8,
-                  background: supplierMsg.startsWith('✓') ? 'var(--accent-green-light)' : 'var(--accent-red-light)',
-                  color: supplierMsg.startsWith('✓') ? 'var(--accent-green)' : 'var(--accent-red)' }}>
+                <div style={{ padding: '10px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, marginBottom: 8,
+                  background: supplierMsg.startsWith('✓') ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                  color: supplierMsg.startsWith('✓') ? '#10b981' : '#ef4444' }}>
                   {supplierMsg}
                 </div>
               )}
               <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
                 <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => { setShowModal(false); setSupplierMsg(null); }}>Cancel</button>
-                <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleSaveSupplier} disabled={!form.name.trim()}>Save Supplier</button>
+                <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleSaveSupplier} disabled={!form.name.trim() || saving}>
+                  {saving ? 'Saving...' : 'Save Supplier'}
+                </button>
               </div>
             </div>
           </div>
@@ -215,8 +224,8 @@ export default function Suppliers() {
 
       {/* New PO Modal */}
       {showPOModal && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: 500 }}>
+        <div className="modal-overlay" onClick={() => { setShowPOModal(false); setPoMsg(null); setPoSelectedProducts([]); }}>
+          <div className="modal-content" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Create Purchase Order</h3>
               <button className="close-btn" onClick={() => { setShowPOModal(false); setPoMsg(null); setPoSelectedProducts([]); }}><X size={20} /></button>
@@ -231,35 +240,79 @@ export default function Suppliers() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Select Products *</label>
-                <div style={{ border: '1px solid var(--border-color)', borderRadius: 8, maxHeight: 180, overflowY: 'auto', padding: 8 }}>
-                  {products.length === 0 && <div style={{ color: 'var(--text-muted)', fontSize: 12, padding: 8 }}>No products available</div>}
-                  {products.map(p => (
-                    <label key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 6, cursor: 'pointer',
-                      background: poSelectedProducts.includes(p.id) ? 'var(--accent-blue-light, rgba(59,130,246,0.08))' : 'transparent' }}>
-                      <input type="checkbox" checked={poSelectedProducts.includes(p.id)} onChange={() => toggleProduct(p.id)}
-                        style={{ accentColor: 'var(--accent-blue)' }} />
-                      <span style={{ flex: 1, fontSize: 13, fontWeight: poSelectedProducts.includes(p.id) ? 600 : 400 }}>{p.name}</span>
-                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>₹{p.price} • Stock: {p.stockQuantity}</span>
-                    </label>
-                  ))}
+                <label className="form-label" style={{ marginBottom: 8 }}>Select Products *</label>
+                <div style={{
+                  border: '1px solid var(--border-color)',
+                  borderRadius: 8,
+                  maxHeight: 200,
+                  overflowY: 'auto',
+                  background: 'var(--bg-primary)',
+                }}>
+                  {products.length === 0 && (
+                    <div style={{ color: 'var(--text-muted)', fontSize: 13, padding: 16, textAlign: 'center' }}>No products available</div>
+                  )}
+                  {products.map(p => {
+                    const selected = poSelectedProducts.includes(p.id);
+                    return (
+                      <div
+                        key={p.id}
+                        onClick={() => toggleProduct(p.id)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 10,
+                          padding: '10px 14px',
+                          cursor: 'pointer',
+                          borderBottom: '1px solid var(--border-color)',
+                          background: selected ? 'rgba(59,130,246,0.06)' : 'transparent',
+                          transition: 'background 0.15s ease',
+                        }}
+                      >
+                        {/* Custom checkbox */}
+                        <div style={{
+                          width: 20, height: 20, borderRadius: 4, flexShrink: 0,
+                          border: selected ? '2px solid #3b82f6' : '2px solid var(--border-color)',
+                          background: selected ? '#3b82f6' : 'transparent',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          transition: 'all 0.15s ease',
+                        }}>
+                          {selected && <Check size={13} color="#fff" strokeWidth={3} />}
+                        </div>
+                        {/* Product name */}
+                        <span style={{ flex: 1, fontSize: 13, fontWeight: selected ? 600 : 400, color: 'var(--text-primary)' }}>
+                          {p.name}
+                        </span>
+                        {/* Price & stock */}
+                        <span style={{ fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                          ₹{p.price}
+                        </span>
+                        <span style={{
+                          fontSize: 11, padding: '2px 8px', borderRadius: 10, fontWeight: 500,
+                          background: p.stockQuantity <= 5 ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)',
+                          color: p.stockQuantity <= 5 ? '#ef4444' : '#10b981',
+                        }}>
+                          Stock: {p.stockQuantity}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
                 {poSelectedProducts.length > 0 && (
-                  <div style={{ fontSize: 11, color: 'var(--accent-blue)', marginTop: 4 }}>
-                    Selected: {selectedProductNames}
+                  <div style={{ fontSize: 12, color: '#3b82f6', marginTop: 6, fontWeight: 500 }}>
+                    {poSelectedProducts.length} selected: {selectedProductNames}
                   </div>
                 )}
               </div>
 
               <div className="form-group">
                 <label className="form-label">Total Amount (₹) *</label>
-                <input className="form-input" type="number" value={poTotalAmount || ''} onChange={e => setPoTotalAmount(Number(e.target.value))} min={1} />
+                <input className="form-input" type="number" value={poTotalAmount || ''} onChange={e => setPoTotalAmount(Number(e.target.value))} min={1} placeholder="Enter total amount" />
               </div>
 
               {poMsg && (
-                <div style={{ padding: '8px 12px', borderRadius: 8, fontSize: 12, fontWeight: 500, marginBottom: 12,
-                  background: poMsg.startsWith('✓') ? 'var(--accent-green-light)' : 'var(--accent-red-light)',
-                  color: poMsg.startsWith('✓') ? 'var(--accent-green)' : 'var(--accent-red)' }}>
+                <div style={{ padding: '10px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, marginBottom: 12,
+                  background: poMsg.startsWith('✓') ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                  color: poMsg.startsWith('✓') ? '#10b981' : '#ef4444' }}>
                   {poMsg}
                 </div>
               )}
