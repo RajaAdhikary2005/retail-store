@@ -9,6 +9,10 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.Statement;
+
 @Component
 public class DataInitializer implements CommandLineRunner {
 
@@ -21,8 +25,19 @@ public class DataInitializer implements CommandLineRunner {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private DataSource dataSource;
+
     @Override
     public void run(String... args) throws Exception {
+        // Fix: Alter orders.status column from ENUM to VARCHAR so any status string is accepted
+        try (Connection conn = dataSource.getConnection(); Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate("ALTER TABLE orders MODIFY COLUMN status VARCHAR(50) NOT NULL DEFAULT 'Pending'");
+            System.out.println("orders.status column updated to VARCHAR(50)");
+        } catch (Exception e) {
+            System.out.println("orders.status column migration skipped: " + e.getMessage());
+        }
+
         // Seed default store if none exists
         if (storeRepository.count() == 0) {
             Store defaultStore = new Store();

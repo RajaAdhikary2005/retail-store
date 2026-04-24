@@ -46,8 +46,7 @@ public class OrderService {
         Order order = new Order();
         order.setCustomer(customer);
         order.setTotalAmount(dto.getTotalAmount());
-        order.setStatus(Order.OrderStatus.Pending);
-        if (dto.getStatus() != null) order.setStatus(Order.OrderStatus.valueOf(dto.getStatus()));
+        order.setStatus(dto.getStatus() != null ? dto.getStatus() : "Pending");
         order.setShippingAddress(dto.getShippingAddress());
 
         List<OrderItem> items = new ArrayList<>();
@@ -76,7 +75,7 @@ public class OrderService {
     public OrderDTO updateOrderStatus(Integer id, String status) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
-        order.setStatus(Order.OrderStatus.valueOf(status));
+        order.setStatus(status);
         return toDTO(orderRepository.save(order));
     }
 
@@ -86,7 +85,7 @@ public class OrderService {
         dto.setCustomerId(order.getCustomer().getId());
         dto.setCustomerName(order.getCustomer().getName());
         dto.setOrderDate(order.getOrderDate().toString());
-        dto.setStatus(order.getStatus().name());
+        dto.setStatus(order.getStatus());
         dto.setTotalAmount(order.getTotalAmount());
         dto.setShippingAddress(order.getShippingAddress());
 

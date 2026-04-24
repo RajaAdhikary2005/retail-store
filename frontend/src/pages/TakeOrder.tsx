@@ -152,7 +152,7 @@ export default function TakeOrder({ userName }: Props) {
         totalPrice: item.price * item.quantity
       })),
       totalAmount: total,
-      status: 'Delivered',
+      status: 'Completed',
       paymentMethod,
       orderDate: new Date().toISOString(),
       processedBy: userName,
@@ -196,10 +196,10 @@ export default function TakeOrder({ userName }: Props) {
                 <div style={{ fontWeight: 600, marginBottom: 4 }}>{p.name}</div>
                 <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 8 }}>{p.category}</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontWeight: 700, color: 'var(--accent-blue)' }}>₹{p.price}</span>
                   <span style={{ fontSize: 11, color: p.stockQuantity < 10 ? 'var(--accent-red)' : 'var(--text-muted)' }}>
                     {p.stockQuantity <= 0 ? 'Out of Stock' : `Stock: ${p.stockQuantity}`}
                   </span>
+                  <span style={{ fontWeight: 700, color: 'var(--accent-blue)' }}>₹{p.price}</span>
                 </div>
               </div>
             ))}

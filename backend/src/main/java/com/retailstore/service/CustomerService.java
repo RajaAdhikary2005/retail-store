@@ -47,7 +47,7 @@ public class CustomerService {
         if (orders != null) {
             dto.setTotalOrders(orders.size());
             dto.setTotalSpent(orders.stream()
-                    .filter(o -> o.getStatus() != Order.OrderStatus.Cancelled)
+                    .filter(o -> !"Cancelled".equals(o.getStatus()))
                     .map(Order::getTotalAmount)
                     .reduce(BigDecimal.ZERO, BigDecimal::add));
         } else {

@@ -22,9 +22,8 @@ public class Order {
     @Column(name = "order_date")
     private LocalDate orderDate;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private OrderStatus status = OrderStatus.Pending;
+    @Column(nullable = false, length = 50)
+    private String status = "Pending";
 
     @Column(name = "total_amount", precision = 10, scale = 2)
     private BigDecimal totalAmount;
@@ -41,8 +40,6 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<OrderItem> items;
 
-    public enum OrderStatus { Pending, Processing, Shipped, Delivered, Cancelled, Completed }
-
     public Order() {}
 
     // Getters and Setters
@@ -52,8 +49,8 @@ public class Order {
     public void setCustomer(Customer customer) { this.customer = customer; }
     public LocalDate getOrderDate() { return orderDate; }
     public void setOrderDate(LocalDate orderDate) { this.orderDate = orderDate; }
-    public OrderStatus getStatus() { return status; }
-    public void setStatus(OrderStatus status) { this.status = status; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
     public BigDecimal getTotalAmount() { return totalAmount; }
     public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
     public String getShippingAddress() { return shippingAddress; }
