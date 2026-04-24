@@ -1,17 +1,25 @@
 import { useState, useEffect } from 'react';
-import { AlertTriangle, Package, TrendingDown } from 'lucide-react';
-import { fetchProducts } from '../services/api';
+import { AlertTriangle, Package, TrendingDown, Plus, X } from 'lucide-react';
+import { fetchProducts, fetchSuppliers, createPO, type Supplier } from '../services/api';
 import type { Product } from '../types';
 
 export default function InventoryAlerts() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [filter, setFilter] = useState('all');
-  const [_loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+
+  const [showPOModal, setShowPOModal] = useState(false);
+  const [poProduct, setPOProduct] = useState<Product | null>(null);
+  const [poSupplierId, setPOSupplierId] = useState(0);
+  const [poQty, setPOQty] = useState(50);
+  const [poMsg, setPOMsg] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
-    fetchProducts().then(data => {
-      setProducts(data);
+    Promise.all([fetchProducts(), fetchSuppliers()]).then(([p, s]) => {
+      setProducts(p);
+      setSuppliers(s);
       setLoading(false);
     });
   }, []);
@@ -25,6 +33,35 @@ export default function InventoryAlerts() {
   const filteredProducts = products
     .filter(p => filter === 'all' || status(p.stockQuantity).level === filter)
     .sort((a, b) => a.stockQuantity - b.stockQuantity);
+
+  const openPOModal = (p: Product) => {
+    setPOProduct(p);
+    setPOQty(50);
+    setPOSupplierId(suppliers.length > 0 ? suppliers[0].id : 0);
+    setPOMsg(null);
+    setShowPOModal(true);
+  };
+
+  const handleCreatePO = async () => {
+    if (!poProduct || !poSupplierId || poQty <= 0) return;
+    const supplier = suppliers.find(s => s.id === poSupplierId);
+    try {
+      await createPO({
+        supplierId: poSupplierId,
+        supplierName: supplier?.name || '',
+        productNames: poProduct.name,
+        totalAmount: poProduct.price * poQty,
+        status: 'Pending',
+        orderDate: new Date().toISOString(),
+      });
+      setPOMsg(`✓ PO created for ${poQty} units of ${poProduct.name}`);
+      setTimeout(() => { setShowPOModal(false); setPOMsg(null); }, 2000);
+    } catch {
+      setPOMsg('Failed to create PO');
+    }
+  };
+
+  if (loading) return <div className="loading-spinner"><div className="spinner" /></div>;
 
   return (
     <>
@@ -61,13 +98,7 @@ export default function InventoryAlerts() {
         <div className="card-body" style={{ padding: 0 }}>
           <table className="data-table">
             <thead>
-              <tr>
-                <th>Product</th>
-                <th>Category</th>
-                <th>Current Stock</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
+              <tr><th>Product</th><th>Category</th><th>Current Stock</th><th>Status</th><th>Actions</th></tr>
             </thead>
             <tbody>
               {filteredProducts.map(p => {
@@ -77,11 +108,11 @@ export default function InventoryAlerts() {
                     <td style={{ fontWeight: 600 }}>{p.name}</td>
                     <td>{p.category}</td>
                     <td style={{ fontWeight: 700 }}>{p.stockQuantity}</td>
+                    <td><span className="badge" style={{ background: s.bg, color: s.color }}>{s.label}</span></td>
                     <td>
-                      <span className="badge" style={{ background: s.bg, color: s.color }}>{s.label}</span>
-                    </td>
-                    <td>
-                      <button className="btn btn-sm btn-primary">Create PO</button>
+                      <button className="btn btn-sm btn-primary" onClick={() => openPOModal(p)}>
+                        <Plus size={12} /> Create PO
+                      </button>
                     </td>
                   </tr>
                 );
@@ -90,6 +121,49 @@ export default function InventoryAlerts() {
           </table>
         </div>
       </div>
+
+      {/* Create PO Modal */}
+      {showPOModal && poProduct && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: 440 }}>
+            <div className="modal-header">
+              <h3>Create Purchase Order</h3>
+              <button className="close-btn" onClick={() => setShowPOModal(false)}><X size={20} /></button>
+            </div>
+            <div className="modal-body">
+              <div style={{ padding: '12px 16px', background: 'var(--bg-primary)', borderRadius: 8, marginBottom: 16 }}>
+                <div style={{ fontWeight: 600 }}>{poProduct.name}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Current Stock: {poProduct.stockQuantity} • Price: ₹{poProduct.price}</div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Supplier</label>
+                <select className="form-select" value={poSupplierId} onChange={e => setPOSupplierId(Number(e.target.value))}>
+                  {suppliers.length === 0 && <option value={0}>No suppliers available</option>}
+                  {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Order Quantity</label>
+                <input className="form-input" type="number" value={poQty} onChange={e => setPOQty(Number(e.target.value))} min={1} />
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12 }}>
+                Estimated Cost: <strong>₹{(poProduct.price * poQty).toLocaleString()}</strong>
+              </div>
+              {poMsg && (
+                <div style={{ padding: '8px 12px', borderRadius: 8, fontSize: 12, fontWeight: 500, marginBottom: 12,
+                  background: poMsg.startsWith('✓') ? 'var(--accent-green-light)' : 'var(--accent-red-light)',
+                  color: poMsg.startsWith('✓') ? 'var(--accent-green)' : 'var(--accent-red)' }}>
+                  {poMsg}
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setShowPOModal(false)}>Cancel</button>
+                <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleCreatePO} disabled={!poSupplierId || poQty <= 0}>Create PO</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -3,6 +3,7 @@ package com.retailstore.controller;
 import com.retailstore.model.Promotion;
 import com.retailstore.repository.PromotionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -21,5 +22,14 @@ public class PromotionController {
     @PostMapping
     public Promotion createPromotion(@RequestBody Promotion promotion) {
         return promotionRepository.save(promotion);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deletePromotion(@PathVariable Long id) {
+        if (promotionRepository.existsById(id)) {
+            promotionRepository.deleteById(id);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
     }
 }

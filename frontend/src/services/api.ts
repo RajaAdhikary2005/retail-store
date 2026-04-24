@@ -195,6 +195,10 @@ export async function findPromoByCode(code: string): Promise<Promotion | null> {
   return promos.find(p => p.code?.toUpperCase() === code.toUpperCase() && p.status === 'Active') || null;
 }
 
+export async function deletePromotion(id: number): Promise<void> {
+  return apiDelete(`/promotions/${id}`);
+}
+
 // ===================== CATEGORIES =====================
 export interface Category { id: number; name: string; description: string; }
 

@@ -4,7 +4,7 @@ import { fetchOrders, updateOrderStatus, exportToCSV } from '../services/api';
 import { type Order, type Customer, type Product } from '../types';
 import { type UserRole, ROLES } from '../services/auth';
 
-const statusOptions: Order['status'][] = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+const statusOptions: Order['status'][] = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Completed'];
 
 export default function Orders({ globalSearch = '', userRole = 'admin' as UserRole }: { globalSearch?: string; userRole?: UserRole }) {
   const canExport = ROLES[userRole].canExport;

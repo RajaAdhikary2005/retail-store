@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Star, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Star, ChevronDown, ChevronUp, Mail, Phone, MapPin, ShoppingBag } from 'lucide-react';
 import { fetchCustomers, fetchOrders } from '../services/api';
 import type { Customer, Order } from '../types';
 
@@ -18,7 +18,7 @@ export default function CustomerLookup() {
 
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [_loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
@@ -42,15 +42,18 @@ export default function CustomerLookup() {
       totalSpent,
       orderCount: custOrders.length,
       tier,
-      lastOrder: custOrders[0]?.orderDate || 'No orders yet'
+      lastOrder: custOrders[0]?.orderDate || 'No orders yet',
+      recentOrders: custOrders.slice(0, 5),
     };
   });
 
   const filtered = liveData.filter(c => {
-    const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase()) || c.phone.includes(search);
+    const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase()) || (c.phone || '').includes(search);
     const matchesTier = tierFilter === 'All' || c.tier === tierFilter;
     return matchesSearch && matchesTier;
   });
+
+  if (loading) return <div className="loading-spinner"><div className="spinner" /></div>;
 
   return (
     <>
@@ -88,23 +91,73 @@ export default function CustomerLookup() {
             </thead>
             <tbody>
               {filtered.map(c => (
-                <tr key={c.id}>
-                  <td style={{ fontWeight: 600 }}>{c.name}</td>
-                  <td>{c.phone}</td>
-                  <td>
-                    <span className="badge" style={{ background: `${tiers.find(t => t.tier === c.tier)?.color}15`, color: tiers.find(t => t.tier === c.tier)?.color }}>
-                      {c.tier}
-                    </span>
-                  </td>
-                  <td style={{ fontWeight: 700 }}>₹{c.totalSpent.toLocaleString()}</td>
-                  <td>{c.orderCount}</td>
-                  <td style={{ fontSize: 12 }}>{c.lastOrder !== 'No orders yet' ? new Date(c.lastOrder).toLocaleDateString() : 'N/A'}</td>
-                  <td>
-                    <button className="btn btn-icon" onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}>
-                      {expandedId === c.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                    </button>
-                  </td>
-                </tr>
+                <>
+                  <tr key={c.id}>
+                    <td style={{ fontWeight: 600 }}>{c.name}</td>
+                    <td>{c.phone}</td>
+                    <td>
+                      <span className="badge" style={{ background: `${tiers.find(t => t.tier === c.tier)?.color}15`, color: tiers.find(t => t.tier === c.tier)?.color }}>
+                        <Star size={10} fill={tiers.find(t => t.tier === c.tier)?.color} /> {c.tier}
+                      </span>
+                    </td>
+                    <td style={{ fontWeight: 700 }}>₹{c.totalSpent.toLocaleString()}</td>
+                    <td>{c.orderCount}</td>
+                    <td style={{ fontSize: 12 }}>{c.lastOrder !== 'No orders yet' ? new Date(c.lastOrder).toLocaleDateString() : 'N/A'}</td>
+                    <td>
+                      <button className="btn btn-sm btn-secondary" onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}>
+                        {expandedId === c.id ? <><ChevronUp size={14} /> Hide</> : <><ChevronDown size={14} /> View</>}
+                      </button>
+                    </td>
+                  </tr>
+                  {expandedId === c.id && (
+                    <tr key={`${c.id}-details`}>
+                      <td colSpan={7} style={{ padding: 0 }}>
+                        <div style={{ padding: '16px 24px', background: 'var(--bg-primary)', borderTop: '1px solid var(--border-color)', borderBottom: '2px solid var(--accent-blue)' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 16 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                              <Mail size={14} color="var(--accent-blue)" />
+                              <span>{c.email || 'N/A'}</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                              <Phone size={14} color="var(--accent-green)" />
+                              <span>{c.phone || 'N/A'}</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                              <MapPin size={14} color="var(--accent-orange)" />
+                              <span>{c.address ? `${c.address}, ${c.city || ''}` : 'N/A'}</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                              <ShoppingBag size={14} color="var(--accent-purple, #8b5cf6)" />
+                              <span>Joined: {c.joinDate ? new Date(c.joinDate).toLocaleDateString() : 'N/A'}</span>
+                            </div>
+                          </div>
+
+                          {c.recentOrders.length > 0 ? (
+                            <>
+                              <h4 style={{ fontSize: 13, marginBottom: 8, color: 'var(--text-secondary)' }}>Recent Orders</h4>
+                              <table className="data-table" style={{ fontSize: 12 }}>
+                                <thead><tr><th>Order #</th><th>Date</th><th>Items</th><th>Amount</th><th>Status</th></tr></thead>
+                                <tbody>
+                                  {c.recentOrders.map(o => (
+                                    <tr key={o.id}>
+                                      <td>#{o.id}</td>
+                                      <td>{new Date(o.orderDate).toLocaleDateString()}</td>
+                                      <td>{o.items?.length || 0} items</td>
+                                      <td style={{ fontWeight: 600 }}>₹{o.totalAmount.toLocaleString()}</td>
+                                      <td><span className={`badge badge-${o.status.toLowerCase()}`}>{o.status}</span></td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </>
+                          ) : (
+                            <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>No orders yet for this customer.</div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </>
               ))}
             </tbody>
           </table>
