@@ -26,7 +26,7 @@ interface CustomerDue {
 }
 
 let MOCK_SUPPLIER_DUES: SupplierDue[] = [
-  { id: 1, supplierId: 1, supplierName: 'TechWorld Electronics', contact: '+91 98765 11111', totalDue: 45000, lastPaymentDate: '2025-03-15', status: 'Overdue', invoices: 3 },
+  { id: 1, supplierId: 1, supplierName: 'TechWorld Electronics', contact: 'Rajesh Kumar', totalDue: 145000, lastPaymentDate: '2025-03-15', status: 'Overdue', invoices: 3 },
   { id: 2, supplierId: 2, supplierName: 'FreshMart Groceries', contact: '+91 98765 22222', totalDue: 12500, lastPaymentDate: '2025-04-10', status: 'Due Soon', invoices: 2 },
   { id: 3, supplierId: 3, supplierName: 'FootGear India', contact: '+91 98765 33333', totalDue: 0, lastPaymentDate: '2025-04-18', status: 'Paid', invoices: 0 },
   { id: 4, supplierId: 4, supplierName: 'HomeStyle Furnishings', contact: '+91 98765 44444', totalDue: 28750, lastPaymentDate: '2025-02-28', status: 'Overdue', invoices: 4 },
@@ -38,7 +38,7 @@ let MOCK_CUSTOMER_DUES: CustomerDue[] = [
   { id: 1, customerId: 3, customerName: 'Rahul Gupta', email: 'rahul.gupta@email.com', totalDue: 172.47, lastOrderDate: '2025-04-17', status: 'Due Soon', pendingOrders: 1 },
   { id: 2, customerId: 2, customerName: 'Priya Patel', email: 'priya.patel@email.com', totalDue: 172.47, lastOrderDate: '2025-04-17', status: 'Due Soon', pendingOrders: 1 },
   { id: 3, customerId: 5, customerName: 'Vikram Singh', email: 'vikram.singh@email.com', totalDue: 0, lastOrderDate: '2025-04-19', status: 'Paid', pendingOrders: 0 },
-  { id: 4, customerId: 1, customerName: 'Arjun Sharma', email: 'arjun.sharma@email.com', totalDue: 94.97, lastOrderDate: '2025-04-18', status: 'Due Soon', pendingOrders: 1 },
+  { id: 4, customerId: 1, customerName: 'Arjun Sharma', email: 'arjun@email.com', totalDue: 15600, lastOrderDate: '2025-04-10', status: 'Due Soon', pendingOrders: 2 },
   { id: 5, customerId: 4, customerName: 'Sneha Reddy', email: 'sneha.reddy@email.com', totalDue: 0, lastOrderDate: '2025-04-15', status: 'Paid', pendingOrders: 0 },
   { id: 6, customerId: 7, customerName: 'Karan Mehta', email: 'karan.mehta@email.com', totalDue: 0, lastOrderDate: '2025-04-16', status: 'Paid', pendingOrders: 0 },
 ];
@@ -62,7 +62,7 @@ export default function Dues({ userRole = 'admin' as UserRole }: { userRole?: Us
   
   // Local state for mutability
   const [, forceUpdate] = useState(0);
-  const refresh = () => forceUpdate(n => n + 1);
+  const refresh = () => forceUpdate((n: number) => n + 1);
 
   // Modals
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -103,6 +103,7 @@ export default function Dues({ userRole = 'admin' as UserRole }: { userRole?: Us
     if (tab === 'supplier') {
       MOCK_SUPPLIER_DUES.unshift({
         id: Date.now(),
+        supplierId: Date.now(),
         supplierName: dueName,
         contact: dueContact,
         totalDue: dueAmount,
@@ -113,6 +114,7 @@ export default function Dues({ userRole = 'admin' as UserRole }: { userRole?: Us
     } else {
       MOCK_CUSTOMER_DUES.unshift({
         id: Date.now(),
+        customerId: Date.now(),
         customerName: dueName,
         email: dueContact,
         totalDue: dueAmount,
@@ -304,7 +306,7 @@ export default function Dues({ userRole = 'admin' as UserRole }: { userRole?: Us
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent-blue), var(--accent-purple))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 12, fontWeight: 600, flexShrink: 0 }}>
-                          {c.customerName.split(' ').map(n => n[0]).join('')}
+                          {c.customerName.split(' ').map((n: string) => n[0]).join('')}
                         </div>
                         <span style={{ fontWeight: 500 }}>{c.customerName}</span>
                       </div>

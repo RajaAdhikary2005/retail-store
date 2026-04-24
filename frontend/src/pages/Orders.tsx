@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Search, Download, Eye, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { fetchOrders, updateOrderStatus, exportToCSV } from '../services/api';
-import type { Order } from '../types';
+import { type Order, type Customer, type Product } from '../types';
 import { type UserRole, ROLES } from '../services/auth';
 
 const statusOptions: Order['status'][] = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];

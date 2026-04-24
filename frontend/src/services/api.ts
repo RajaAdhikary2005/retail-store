@@ -1,5 +1,5 @@
 import type { Product, Customer, Order, DashboardStats, AnalyticsData } from '../types';
-import { mockProducts, mockCustomers, mockOrders, mockDashboardStats, mockSalesTrends, mockTopProducts, mockCategoryDistribution, mockTopCustomers, mockMonthlyRevenue, mockInventoryAlerts } from './mockData';
+import { mockProducts, mockCustomers, mockOrders } from './mockData';
 
 // Simulated API delay for realistic UX
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
@@ -197,11 +197,13 @@ export async function fetchAnalytics(): Promise<AnalyticsData> {
     const monthlyRevenue = salesTrends.map(t => ({ month: t.month, revenue: t.sales, growth: 5.5 }));
 
     const inventoryAlerts = mockProducts
-      .filter(p => p.stockQuantity < 10)
+      .filter(p => p.stockQuantity < 20)
       .map(p => ({
-        product: p.name,
-        stock: p.stockQuantity,
-        status: p.stockQuantity === 0 ? 'Out of Stock' : 'Low Stock'
+        productId: p.id,
+        productName: p.name,
+        currentStock: p.stockQuantity,
+        threshold: 20,
+        status: (p.stockQuantity === 0 ? 'Critical' : 'Low') as 'Critical' | 'Low' | 'Normal'
       })).slice(0, 5);
 
     return {

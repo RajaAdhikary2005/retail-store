@@ -2,7 +2,6 @@ import { useEffect, useState, useMemo } from 'react';
 import { Search, Download, Eye, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { fetchCustomers, exportToCSV } from '../services/api';
 import type { Customer } from '../types';
-import { mockOrders } from '../services/mockData';
 import { type UserRole, ROLES } from '../services/auth';
 
 export default function Customers({ globalSearch = '', userRole = 'admin' as UserRole }: { globalSearch?: string; userRole?: UserRole }) {

@@ -124,7 +124,7 @@ export default function CustomerLookup() {
               <div key={customer.id} className="card" style={{ overflow: 'hidden' }}>
                 <div style={{ padding: '16px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 16 }} onClick={() => setExpandedId(isExpanded ? null : customer.id)}>
                   <div style={{ width: 48, height: 48, borderRadius: '50%', background: `linear-gradient(135deg, ${loyalty.tierColor}40, ${loyalty.tierColor}20)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 16, color: loyalty.tierColor, flexShrink: 0 }}>
-                    {customer.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                    {customer.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 2 }}>{customer.name}</div>

@@ -10,13 +10,12 @@ interface RequestsProps {
 }
 
 export default function Requests({ user }: RequestsProps) {
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [, forceUpdate] = useState(0);
   const [actionMsg, setActionMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const requests = getRequestsForAdmin(user.email);
   const pendingRequests = requests.filter(r => r.status === 'pending');
   const processedRequests = requests.filter(r => r.status !== 'pending');
-
   const handleApprove = (request: SignupRequest) => {
     const result = approveRequest(request.id);
     if (result) {
@@ -24,7 +23,7 @@ export default function Requests({ user }: RequestsProps) {
     } else {
       setActionMsg({ type: 'error', text: 'Failed to approve request.' });
     }
-    setRefreshKey(k => k + 1);
+    forceUpdate((n: number) => n + 1);
     setTimeout(() => setActionMsg(null), 4000);
   };
 
@@ -35,7 +34,7 @@ export default function Requests({ user }: RequestsProps) {
     } else {
       setActionMsg({ type: 'error', text: 'Failed to reject request.' });
     }
-    setRefreshKey(k => k + 1);
+    forceUpdate((n: number) => n + 1);
     setTimeout(() => setActionMsg(null), 4000);
   };
 

@@ -169,7 +169,7 @@ export default function Suppliers() {
           <div className="form-group"><label className="form-label">Email</label><input className="form-input" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
           <div className="form-group"><label className="form-label">Phone</label><input className="form-input" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
           <div className="form-group"><label className="form-label">Address</label><input className="form-input" value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} /></div>
-          <div className="form-group"><label className="form-label">Products (comma separated)</label><input className="form-input" value={form.products} onChange={e => setForm({ ...form, products: e.target.value })} /></div>
+          <div className="form-group"><label className="form-label">Products (comma separated)</label><input className="form-input" value={form.products as string} onChange={e => setForm({ ...form, products: e.target.value })} /></div>
         </div>
         <div className="modal-footer"><button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button><button className="btn btn-primary" onClick={saveSupplier}>Save</button></div>
       </div></div>}

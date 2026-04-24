@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Eye, EyeOff, Store, CheckCircle } from 'lucide-react';
 import {
-  USERS, ROLES, STORES,
+  USERS, ROLES,
   type UserInfo, type UserRole,
   createStore, submitSignupRequest, isEmailPending, getStores,
 } from '../services/auth';

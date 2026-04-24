@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { RotateCcw, CheckCircle, XCircle, Clock, Plus, Package } from 'lucide-react';
 import { fetchOrders, fetchCustomers } from '../services/api';
-import type { Order, Customer } from '../types';
+import type { Order, Customer, Product } from '../types';
 import { type UserRole } from '../services/auth';
 import { RETURNS, addReturn, updateReturnStatus, type ReturnItem } from '../services/returnStore';
 

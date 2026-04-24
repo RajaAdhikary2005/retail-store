@@ -18,7 +18,7 @@ interface CartItem {
 
 
 
-export default function TakeOrder({ userRole, userName }: Props) {
+export default function TakeOrder({ userName }: Props) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchProduct, setSearchProduct] = useState('');
   
@@ -196,7 +196,8 @@ export default function TakeOrder({ userRole, userName }: Props) {
         productName: item.name,
         quantity: item.quantity,
         unitPrice: item.price,
-        totalPrice: item.price * item.quantity
+        totalPrice: item.price * item.quantity,
+        orderId: 0 // Will be set by backend
       }))
     };
     
@@ -374,7 +375,7 @@ export default function TakeOrder({ userRole, userName }: Props) {
                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>{p.category}</div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontWeight: 700, color: 'var(--accent-blue)' }}>₹{p.price.toFixed(2)}</span>
-                      <span style={{ fontSize: 11, padding: '2px 6px', background: p.stock > 10 ? 'var(--accent-green-light)' : 'var(--accent-red-light)', color: p.stock > 10 ? 'var(--accent-green)' : 'var(--accent-red)', borderRadius: 10 }}>Stock: {p.stock}</span>
+                      <span style={{ fontSize: 11, padding: '2px 6px', background: p.stockQuantity > 10 ? 'var(--accent-green-light)' : 'var(--accent-red-light)', color: p.stockQuantity > 10 ? 'var(--accent-green)' : 'var(--accent-red)', borderRadius: 10 }}>Stock: {p.stockQuantity}</span>
                     </div>
                   </div>
                 ))}
