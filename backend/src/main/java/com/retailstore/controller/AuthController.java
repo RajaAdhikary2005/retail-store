@@ -135,4 +135,44 @@ public class AuthController {
         }
         return ResponseEntity.notFound().build();
     }
+
+    @PutMapping("/update-profile")
+    public ResponseEntity<?> updateProfile(@RequestBody Map<String, String> body) {
+        String currentEmail = body.get("currentEmail");
+        String newName = body.get("name");
+        String newEmail = body.get("email");
+
+        Optional<User> userOpt = userRepository.findByEmail(currentEmail);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        User user = userOpt.get();
+
+        if (newEmail != null && !newEmail.equals(currentEmail)) {
+            if (userRepository.findByEmail(newEmail).isPresent()) {
+                return ResponseEntity.badRequest().body("Email already in use");
+            }
+            user.setEmail(newEmail);
+        }
+
+        if (newName != null && !newName.trim().isEmpty()) {
+            user.setName(newName.trim());
+            String[] parts = newName.trim().split(" ");
+            String avatar = parts.length > 1
+                ? ("" + parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase()
+                : newName.trim().substring(0, Math.min(2, newName.trim().length())).toUpperCase();
+            user.setAvatar(avatar);
+        }
+
+        User saved = userRepository.save(user);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("name", saved.getName());
+        response.put("email", saved.getEmail());
+        response.put("role", saved.getRole());
+        response.put("avatar", saved.getAvatar());
+        response.put("storeId", saved.getStoreId());
+        return ResponseEntity.ok(response);
+    }
 }

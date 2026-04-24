@@ -1,20 +1,60 @@
 import { useState } from 'react';
-import { User, Mail, Shield, LogOut } from 'lucide-react';
+import { User, Mail, Shield, LogOut, Check, AlertCircle } from 'lucide-react';
 import { type UserInfo, ROLES } from '../services/auth';
 
-interface SettingsProps { onLogout: () => void; user?: UserInfo; }
+const API_BASE = 'https://retail-store-k6pr.onrender.com/api';
 
-export default function Settings({ onLogout, user }: SettingsProps) {
+interface SettingsProps { onLogout: () => void; user?: UserInfo; onUpdateUser?: (u: UserInfo) => void; }
+
+export default function Settings({ onLogout, user, onUpdateUser }: SettingsProps) {
   const userInfo = user || { name: 'Retail Admin', email: 'admin@retailstore.com', role: 'admin' as const, avatar: 'RA' };
   const [name, setName] = useState(userInfo.name);
   const [email, setEmail] = useState(userInfo.email);
-  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const roleInfo = ROLES[userInfo.role];
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    if (!name.trim()) return;
+    setSaving(true);
+    setMsg(null);
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/update-profile`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentEmail: userInfo.email,
+          name: name.trim(),
+          email: email.trim(),
+        }),
+      });
+
+      if (res.ok) {
+        const updated = await res.json();
+        const newUser: UserInfo = {
+          name: updated.name,
+          email: updated.email,
+          role: updated.role || userInfo.role,
+          avatar: updated.avatar || userInfo.avatar,
+          storeId: updated.storeId || userInfo.storeId,
+        };
+
+        // Update parent state
+        if (onUpdateUser) onUpdateUser(newUser);
+
+        setMsg({ text: 'Profile updated successfully!', ok: true });
+      } else {
+        const errText = await res.text();
+        setMsg({ text: errText || 'Failed to update profile', ok: false });
+      }
+    } catch {
+      setMsg({ text: 'Network error — could not reach server', ok: false });
+    } finally {
+      setSaving(false);
+      setTimeout(() => setMsg(null), 3000);
+    }
   };
 
   return (
@@ -51,8 +91,21 @@ export default function Settings({ onLogout, user }: SettingsProps) {
                   {roleInfo.description}
                 </div>
               </div>
-              <button type="submit" className="btn btn-primary" style={{ marginTop: 8 }}>
-                {saved ? '✓ Saved!' : 'Save Changes'}
+
+              {msg && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 8, marginBottom: 12,
+                  fontSize: 13, fontWeight: 500,
+                  background: msg.ok ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                  color: msg.ok ? '#10b981' : '#ef4444',
+                }}>
+                  {msg.ok ? <Check size={14} /> : <AlertCircle size={14} />}
+                  {msg.text}
+                </div>
+              )}
+
+              <button type="submit" className="btn btn-primary" style={{ marginTop: 8 }} disabled={saving || !name.trim()}>
+                {saving ? 'Saving...' : 'Save Changes'}
               </button>
             </form>
           </div>

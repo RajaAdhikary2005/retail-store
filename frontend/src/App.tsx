@@ -81,7 +81,7 @@ function App() {
       case 'suppliers': return <Suppliers />;
       case 'promotions': return <Promotions />;
       case 'take-order': return <TakeOrder userRole={user.role} userName={user.name} />;
-      case 'settings': return <Settings onLogout={handleLogout} user={user} />;
+      case 'settings': return <Settings onLogout={handleLogout} user={user} onUpdateUser={setUser} />;
       default: return <Dashboard />;
     }
   };
