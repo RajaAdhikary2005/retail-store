@@ -41,7 +41,7 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<OrderItem> items;
 
-    public enum OrderStatus { Pending, Processing, Shipped, Delivered, Cancelled }
+    public enum OrderStatus { Pending, Processing, Shipped, Delivered, Cancelled, Completed }
 
     public Order() {}
 

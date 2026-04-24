@@ -49,7 +49,7 @@ export default function UserManagement({ user }: UserManagementProps) {
   const toggleSuspend = (u: ManagedUser) => {
     const next = u.status === 'active' || u.status === 'approved' ? 'suspended' : 'active';
     updateUserStatus(u.id, next);
-    flash(`${u.name} has been ${next === 'active' ? 'reactivated' : 'suspended'}.`);
+    flash(`${u.name} has been ${next === 'active' ? 'activated' : 'suspended'}.`);
   };
 
   const admins = users.filter(u => u.role === 'admin');
@@ -75,7 +75,7 @@ export default function UserManagement({ user }: UserManagementProps) {
         <td>{!isSelf && (
           <div style={{ display: 'flex', gap: 4 }}>
             <button className={`btn btn-sm ${u.status === 'active' || u.status === 'approved' ? 'btn-secondary' : 'btn-success'}`} onClick={() => toggleSuspend(u)} style={{ padding: '4px 8px' }}>
-              {u.status === 'active' || u.status === 'approved' ? <><UserX size={12} /> Suspend</> : <>✓ Reactivate</>}
+              {u.status === 'active' || u.status === 'approved' ? <><UserX size={12} /> Suspend</> : <>✓ Activate</>}
             </button>
           </div>
         )}</td>

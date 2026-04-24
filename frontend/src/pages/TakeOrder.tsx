@@ -121,13 +121,18 @@ export default function TakeOrder({ userName }: Props) {
   const handleAddNewCustomer = async () => {
     if (!newCustName.trim() || !newCustEmail.trim() || !newCustPhone.trim()) return;
     try {
-      const c = await createCustomer({ name: newCustName.trim(), email: newCustEmail.trim(), phone: newCustPhone.trim(), address: '', city: '', state: '', zipCode: '' });
-      setCustomers(prev => [...prev, c]);
-      setSelectedCustomer(c);
-      setCustomerName(c.name);
-      setShowNewCustomer(false);
-      setNewCustName(''); setNewCustEmail(''); setNewCustPhone('');
-    } catch { setOrderError('Failed to create customer'); }
+      const c = await createCustomer({ name: newCustName.trim(), email: newCustEmail.trim(), phone: newCustPhone.trim() });
+      if (c && c.id) {
+        setCustomers(prev => [...prev, c]);
+        setSelectedCustomer(c);
+        setCustomerName(c.name);
+        setShowNewCustomer(false);
+        setNewCustName(''); setNewCustEmail(''); setNewCustPhone('');
+        setOrderError('');
+      } else {
+        setOrderError('Failed to create customer — invalid response');
+      }
+    } catch (err: any) { setOrderError(err?.message || 'Failed to create customer'); }
   };
 
   const handleCheckout = async () => {
@@ -147,7 +152,7 @@ export default function TakeOrder({ userName }: Props) {
         totalPrice: item.price * item.quantity
       })),
       totalAmount: total,
-      status: 'Completed',
+      status: 'Delivered',
       paymentMethod,
       orderDate: new Date().toISOString(),
       processedBy: userName,
@@ -185,8 +190,8 @@ export default function TakeOrder({ userName }: Props) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
             {filteredProducts.map(p => (
               <div key={p.id} onClick={() => addToCart(p)} style={{
-                border: '1px solid var(--border-color)', borderRadius: 12, padding: 12, cursor: p.stockQuantity > 0 ? 'pointer' : 'not-allowed',
-                transition: 'all 0.2s', opacity: p.stockQuantity <= 0 ? 0.4 : 1,
+                border: `1px solid ${p.stockQuantity <= 0 ? 'var(--accent-red)' : 'var(--border-color)'}`, borderRadius: 12, padding: 12, cursor: p.stockQuantity > 0 ? 'pointer' : 'not-allowed',
+                transition: 'all 0.2s', opacity: p.stockQuantity <= 0 ? 0.65 : 1, position: 'relative',
               }}>
                 <div style={{ fontWeight: 600, marginBottom: 4 }}>{p.name}</div>
                 <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 8 }}>{p.category}</div>
