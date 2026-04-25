@@ -58,7 +58,6 @@ export default function Analytics() {
     labels: trendData.map(s => s.label),
     datasets: [
       { label: 'Sales (₹)', data: trendData.map(s => s.sales), backgroundColor: '#3b82f6', borderRadius: 6, barThickness: trendPeriod === 'day' ? 16 : 24 },
-      { label: 'Orders', data: trendData.map(s => s.orders * 100), backgroundColor: '#8b5cf6', borderRadius: 6, barThickness: trendPeriod === 'day' ? 16 : 24 },
     ]
   };
 
