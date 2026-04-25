@@ -1,6 +1,5 @@
 // Role-Based Access Control System
-const API_BASE = 'https://retail-store-k6pr.onrender.com/api';
-
+const API_BASE = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:8080/api');
 export type UserRole = 'admin' | 'manager' | 'staff';
 
 export interface UserInfo {
