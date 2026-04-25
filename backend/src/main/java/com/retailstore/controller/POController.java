@@ -23,12 +23,14 @@ public class POController {
     private ProductRepository productRepository;
 
     @GetMapping
-    public List<PurchaseOrder> getAllPOs() {
+    public List<PurchaseOrder> getAllPOs(@RequestParam(required = false) Long storeId) {
+        if (storeId != null) return poRepository.findByStoreId(storeId);
         return poRepository.findAll();
     }
 
     @PostMapping
-    public PurchaseOrder createPO(@RequestBody PurchaseOrder po) {
+    public PurchaseOrder createPO(@RequestBody PurchaseOrder po, @RequestParam(required = false) Long storeId) {
+        if (storeId != null) po.setStoreId(storeId);
         return poRepository.save(po);
     }
 

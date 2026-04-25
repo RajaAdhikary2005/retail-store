@@ -19,6 +19,7 @@ public class PurchaseOrder {
     private LocalDateTime deliveryDate;
     private Integer orderedQuantity;
     private Integer receivedQuantity;
+    private Long storeId;
 
     public PurchaseOrder() {}
 
@@ -41,6 +42,8 @@ public class PurchaseOrder {
     public void setOrderedQuantity(Integer orderedQuantity) { this.orderedQuantity = orderedQuantity; }
     public Integer getReceivedQuantity() { return receivedQuantity; }
     public void setReceivedQuantity(Integer receivedQuantity) { this.receivedQuantity = receivedQuantity; }
+    public Long getStoreId() { return storeId; }
+    public void setStoreId(Long storeId) { this.storeId = storeId; }
 
     @PrePersist
     protected void onCreate() {

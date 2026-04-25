@@ -2,9 +2,29 @@ import type { Product, Customer, Order, DashboardStats, AnalyticsData } from '..
 
 const API_BASE = 'https://retail-store-k6pr.onrender.com/api';
 
+// Helper: get current user's storeId from localStorage
+export function getStoreId(): number | null {
+  try {
+    const raw = localStorage.getItem('retailstore-user');
+    if (raw) {
+      const u = JSON.parse(raw);
+      return u.storeId || null;
+    }
+  } catch {}
+  return null;
+}
+
+// Append storeId query param to any path
+function withStoreId(path: string): string {
+  const sid = getStoreId();
+  if (!sid) return path;
+  const sep = path.includes('?') ? '&' : '?';
+  return `${path}${sep}storeId=${sid}`;
+}
+
 async function apiFetch<T>(path: string, fallback: () => T): Promise<T> {
   try {
-    const res = await fetch(`${API_BASE}${path}`);
+    const res = await fetch(`${API_BASE}${withStoreId(path)}`);
     if (res.ok) return await res.json() as T;
     console.warn(`API ${path} returned ${res.status}`);
   } catch (err) {
@@ -14,7 +34,7 @@ async function apiFetch<T>(path: string, fallback: () => T): Promise<T> {
 }
 
 async function apiPost<T>(path: string, body: any): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${API_BASE}${withStoreId(path)}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
@@ -27,7 +47,7 @@ async function apiPost<T>(path: string, body: any): Promise<T> {
 }
 
 async function apiPut<T>(path: string, body: any): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${API_BASE}${withStoreId(path)}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
@@ -37,12 +57,12 @@ async function apiPut<T>(path: string, body: any): Promise<T> {
 }
 
 async function apiDelete(path: string): Promise<void> {
-  const res = await fetch(`${API_BASE}${path}`, { method: 'DELETE' });
+  const res = await fetch(`${API_BASE}${withStoreId(path)}`, { method: 'DELETE' });
   if (!res.ok) throw new Error(`DELETE ${path} failed (${res.status})`);
 }
 
 async function apiPatch<T>(path: string, body: any): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${API_BASE}${withStoreId(path)}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)

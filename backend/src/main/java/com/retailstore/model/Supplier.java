@@ -24,6 +24,8 @@ public class Supplier {
     @Column(columnDefinition = "VARCHAR(50) DEFAULT 'Active'")
     private String status = "Active";
 
+    private Long storeId;
+
     public Supplier() {}
 
     public Long getId() { return id; }
@@ -44,4 +46,6 @@ public class Supplier {
     public void setPendingDeliveries(Integer pendingDeliveries) { this.pendingDeliveries = pendingDeliveries; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public Long getStoreId() { return storeId; }
+    public void setStoreId(Long storeId) { this.storeId = storeId; }
 }

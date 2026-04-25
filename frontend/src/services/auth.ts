@@ -152,6 +152,16 @@ export async function fetchStoresFromApi(): Promise<Store[]> {
   return [];
 }
 
+export async function deleteStoreApi(storeId: number): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/stores/${storeId}`, { method: 'DELETE' });
+    return res.ok;
+  } catch (err) {
+    console.error('Error deleting store:', err);
+    return false;
+  }
+}
+
 // Kept for backward compat but returns the in-memory array
 // Use fetchStoresFromApi() for real data
 export function getStores(): Store[] {

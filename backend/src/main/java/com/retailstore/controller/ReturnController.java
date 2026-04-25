@@ -16,12 +16,14 @@ public class ReturnController {
     private ReturnRequestRepository returnRepository;
 
     @GetMapping
-    public List<ReturnRequest> getAllReturns() {
+    public List<ReturnRequest> getAllReturns(@RequestParam(required = false) Long storeId) {
+        if (storeId != null) return returnRepository.findByStoreId(storeId);
         return returnRepository.findAll();
     }
 
     @PostMapping
-    public ReturnRequest createReturn(@RequestBody ReturnRequest returnReq) {
+    public ReturnRequest createReturn(@RequestBody ReturnRequest returnReq, @RequestParam(required = false) Long storeId) {
+        if (storeId != null) returnReq.setStoreId(storeId);
         return returnRepository.save(returnReq);
     }
 

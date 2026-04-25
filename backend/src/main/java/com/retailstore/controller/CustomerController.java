@@ -1,7 +1,7 @@
 package com.retailstore.controller;
 
-import com.retailstore.dto.CustomerDTO;
 import com.retailstore.model.Customer;
+import com.retailstore.dto.CustomerDTO;
 import com.retailstore.repository.CustomerRepository;
 import com.retailstore.service.CustomerService;
 import org.springframework.http.HttpStatus;
@@ -24,7 +24,10 @@ public class CustomerController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CustomerDTO>> getAllCustomers() {
+    public ResponseEntity<List<CustomerDTO>> getAllCustomers(@RequestParam(required = false) Long storeId) {
+        if (storeId != null) {
+            return ResponseEntity.ok(customerService.getCustomersByStoreId(storeId));
+        }
         return ResponseEntity.ok(customerService.getAllCustomers());
     }
 
@@ -34,7 +37,7 @@ public class CustomerController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createCustomer(@RequestBody Map<String, String> body) {
+    public ResponseEntity<?> createCustomer(@RequestBody Map<String, String> body, @RequestParam(required = false) Long storeId) {
         try {
             String name = body.getOrDefault("name", "").trim();
             String email = body.getOrDefault("email", "").trim();
@@ -62,6 +65,7 @@ public class CustomerController {
             customer.setCity(body.getOrDefault("city", null));
             customer.setState(body.getOrDefault("state", null));
             customer.setZipCode(body.getOrDefault("zipCode", null));
+            if (storeId != null) customer.setStoreId(storeId);
 
             Customer saved = customerRepository.save(customer);
             return new ResponseEntity<>(saved, HttpStatus.CREATED);

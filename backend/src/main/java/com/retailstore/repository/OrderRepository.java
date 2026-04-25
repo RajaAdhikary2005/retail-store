@@ -12,6 +12,10 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
 
     List<Order> findByCustomerId(Integer customerId);
 
+    List<Order> findByStoreId(Long storeId);
+
+    void deleteByStoreId(Long storeId);
+
     // Fixed query to use native SQL for status comparison to avoid Enum issues in JPQL
     @Query(value = "SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE status != 'Cancelled'", nativeQuery = true)
     BigDecimal getTotalSales();

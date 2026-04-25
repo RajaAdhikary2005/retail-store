@@ -20,7 +20,10 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductDTO>> getAllProducts() {
+    public ResponseEntity<List<ProductDTO>> getAllProducts(@RequestParam(required = false) Long storeId) {
+        if (storeId != null) {
+            return ResponseEntity.ok(productService.getProductsByStoreId(storeId));
+        }
         return ResponseEntity.ok(productService.getAllProducts());
     }
 
@@ -30,8 +33,8 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<ProductDTO> createProduct(@Valid @RequestBody ProductDTO dto) {
-        return new ResponseEntity<>(productService.createProduct(dto), HttpStatus.CREATED);
+    public ResponseEntity<ProductDTO> createProduct(@Valid @RequestBody ProductDTO dto, @RequestParam(required = false) Long storeId) {
+        return new ResponseEntity<>(productService.createProduct(dto, storeId), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")

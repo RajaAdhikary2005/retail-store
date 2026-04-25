@@ -33,6 +33,10 @@ public class OrderService {
         return orderRepository.findAll().stream().map(this::toDTO).collect(Collectors.toList());
     }
 
+    public List<OrderDTO> getOrdersByStoreId(Long storeId) {
+        return orderRepository.findByStoreId(storeId).stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
     public OrderDTO getOrderById(Integer id) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
@@ -48,6 +52,40 @@ public class OrderService {
         order.setTotalAmount(dto.getTotalAmount());
         order.setStatus(dto.getStatus() != null ? dto.getStatus() : "Pending");
         order.setShippingAddress(dto.getShippingAddress());
+
+        List<OrderItem> items = new ArrayList<>();
+        if (dto.getItems() != null) {
+            for (OrderDTO.OrderItemDTO itemDto : dto.getItems()) {
+                Product product = productRepository.findById(itemDto.getProductId())
+                        .orElseThrow(() -> new RuntimeException("Product not found: " + itemDto.getProductId()));
+                
+                OrderItem item = new OrderItem();
+                item.setOrder(order);
+                item.setProduct(product);
+                item.setQuantity(itemDto.getQuantity());
+                item.setUnitPrice(itemDto.getUnitPrice());
+                item.setTotalPrice(itemDto.getTotalPrice());
+                items.add(item);
+
+                // Update stock
+                product.setStockQuantity(product.getStockQuantity() - itemDto.getQuantity());
+                productRepository.save(product);
+            }
+        }
+        order.setItems(items);
+        return toDTO(orderRepository.save(order));
+    }
+
+    public OrderDTO createOrder(OrderDTO dto, Long storeId) {
+        Customer customer = customerRepository.findById(dto.getCustomerId())
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+
+        Order order = new Order();
+        order.setCustomer(customer);
+        order.setTotalAmount(dto.getTotalAmount());
+        order.setStatus(dto.getStatus() != null ? dto.getStatus() : "Pending");
+        order.setShippingAddress(dto.getShippingAddress());
+        if (storeId != null) order.setStoreId(storeId);
 
         List<OrderItem> items = new ArrayList<>();
         if (dto.getItems() != null) {

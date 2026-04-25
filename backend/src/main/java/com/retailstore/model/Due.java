@@ -20,6 +20,7 @@ public class Due {
     private LocalDateTime lastOrderDate;
     
     private LocalDateTime updatedAt;
+    private Long storeId;
 
     public Due() {}
 
@@ -42,6 +43,8 @@ public class Due {
     public LocalDateTime getLastOrderDate() { return lastOrderDate; }
     public void setLastOrderDate(LocalDateTime lastOrderDate) { this.lastOrderDate = lastOrderDate; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public Long getStoreId() { return storeId; }
+    public void setStoreId(Long storeId) { this.storeId = storeId; }
 
     @PrePersist
     @PreUpdate

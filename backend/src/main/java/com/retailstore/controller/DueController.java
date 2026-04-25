@@ -17,13 +17,15 @@ public class DueController {
     private DueRepository dueRepository;
 
     @GetMapping
-    public List<Due> getAllDues(@RequestParam(required = false) String type) {
+    public List<Due> getAllDues(@RequestParam(required = false) String type, @RequestParam(required = false) Long storeId) {
+        if (storeId != null) return dueRepository.findByStoreId(storeId);
         if (type != null) return dueRepository.findByType(type);
         return dueRepository.findAll();
     }
 
     @PostMapping
-    public Due createDue(@RequestBody Due due) {
+    public Due createDue(@RequestBody Due due, @RequestParam(required = false) Long storeId) {
+        if (storeId != null) due.setStoreId(storeId);
         return dueRepository.save(due);
     }
 

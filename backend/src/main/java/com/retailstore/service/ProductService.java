@@ -27,6 +27,10 @@ public class ProductService {
         return productRepository.findAll().stream().map(this::toDTO).collect(Collectors.toList());
     }
 
+    public List<ProductDTO> getProductsByStoreId(Long storeId) {
+        return productRepository.findByStoreId(storeId).stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
     public ProductDTO getProductById(Integer id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
@@ -56,6 +60,34 @@ public class ProductService {
         product.setStockQuantity(dto.getStockQuantity());
         product.setDescription(dto.getDescription());
         product.setImageUrl(dto.getImageUrl());
+        return toDTO(productRepository.save(product));
+    }
+
+    public ProductDTO createProduct(ProductDTO dto, Long storeId) {
+        Category category;
+        if (dto.getCategoryId() != null) {
+            category = categoryRepository.findById(dto.getCategoryId())
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+        } else if (dto.getCategoryName() != null) {
+            category = categoryRepository.findByName(dto.getCategoryName())
+                    .orElseGet(() -> {
+                        Category newCat = new Category();
+                        newCat.setName(dto.getCategoryName());
+                        if (storeId != null) newCat.setStoreId(storeId);
+                        return categoryRepository.save(newCat);
+                    });
+        } else {
+            throw new RuntimeException("Category ID or Category Name is required");
+        }
+
+        Product product = new Product();
+        product.setName(dto.getName());
+        product.setCategory(category);
+        product.setPrice(dto.getPrice());
+        product.setStockQuantity(dto.getStockQuantity());
+        product.setDescription(dto.getDescription());
+        product.setImageUrl(dto.getImageUrl());
+        if (storeId != null) product.setStoreId(storeId);
         return toDTO(productRepository.save(product));
     }
 

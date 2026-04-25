@@ -13,6 +13,10 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
 
     List<Product> findByNameContainingIgnoreCase(String name);
 
+    List<Product> findByStoreId(Long storeId);
+
+    void deleteByStoreId(Long storeId);
+
     @Query("SELECT p FROM Product p WHERE p.stockQuantity < :threshold ORDER BY p.stockQuantity ASC")
     List<Product> findLowStockProducts(int threshold);
 

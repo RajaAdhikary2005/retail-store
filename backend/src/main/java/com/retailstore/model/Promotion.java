@@ -18,6 +18,7 @@ public class Promotion {
     private String status; // Active, Scheduled, Ended
     private LocalDateTime startDate;
     private LocalDateTime endDate;
+    private Long storeId;
 
     public Promotion() {}
 
@@ -39,4 +40,6 @@ public class Promotion {
     public void setStartDate(LocalDateTime startDate) { this.startDate = startDate; }
     public LocalDateTime getEndDate() { return endDate; }
     public void setEndDate(LocalDateTime endDate) { this.endDate = endDate; }
+    public Long getStoreId() { return storeId; }
+    public void setStoreId(Long storeId) { this.storeId = storeId; }
 }

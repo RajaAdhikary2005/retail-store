@@ -37,6 +37,9 @@ public class Customer {
     @Column(name = "join_date")
     private LocalDate joinDate;
 
+    @Column(name = "store_id")
+    private Long storeId;
+
     @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY)
     private List<Order> orders;
 
@@ -62,6 +65,8 @@ public class Customer {
     public LocalDate getJoinDate() { return joinDate; }
     public void setJoinDate(LocalDate joinDate) { this.joinDate = joinDate; }
     public List<Order> getOrders() { return orders; }
+    public Long getStoreId() { return storeId; }
+    public void setStoreId(Long storeId) { this.storeId = storeId; }
 
     @PrePersist
     protected void onCreate() { if (this.joinDate == null) this.joinDate = LocalDate.now(); }

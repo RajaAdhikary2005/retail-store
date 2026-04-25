@@ -25,6 +25,10 @@ public class CustomerService {
         return customerRepository.findAll().stream().map(this::toDTO).collect(Collectors.toList());
     }
 
+    public List<CustomerDTO> getCustomersByStoreId(Long storeId) {
+        return customerRepository.findByStoreId(storeId).stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
     public CustomerDTO getCustomerById(Integer id) {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Customer not found with id: " + id));

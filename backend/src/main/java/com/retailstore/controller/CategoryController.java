@@ -14,12 +14,8 @@ public class CategoryController {
     private CategoryRepository categoryRepository;
 
     @GetMapping
-    public List<Category> getAllCategories() {
+    public List<Category> getAllCategories(@RequestParam(required = false) Long storeId) {
+        if (storeId != null) return categoryRepository.findByStoreId(storeId);
         return categoryRepository.findAll();
-    }
-
-    @PostMapping
-    public Category createCategory(@RequestBody Category category) {
-        return categoryRepository.save(category);
     }
 }

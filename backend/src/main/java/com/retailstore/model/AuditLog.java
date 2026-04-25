@@ -16,6 +16,7 @@ public class AuditLog {
     private String severity; // info, warning, critical
     private String iconStr;
     private LocalDateTime timestamp;
+    private Long storeId;
 
     public AuditLog() {}
 
@@ -32,6 +33,8 @@ public class AuditLog {
     public String getIconStr() { return iconStr; }
     public void setIconStr(String iconStr) { this.iconStr = iconStr; }
     public LocalDateTime getTimestamp() { return timestamp; }
+    public Long getStoreId() { return storeId; }
+    public void setStoreId(Long storeId) { this.storeId = storeId; }
 
     @PrePersist
     protected void onCreate() {

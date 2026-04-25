@@ -40,11 +40,13 @@ function App() {
 
   const handleLogin = (userInfo: UserInfo) => {
     setUser(userInfo);
+    localStorage.setItem('retailstore-user', JSON.stringify(userInfo));
     setCurrentPage('dashboard');
   };
 
   const handleLogout = () => {
     setUser(null);
+    localStorage.removeItem('retailstore-user');
     setCurrentPage('dashboard');
     setGlobalSearch('');
   };

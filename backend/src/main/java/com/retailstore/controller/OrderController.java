@@ -20,7 +20,10 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<List<OrderDTO>> getAllOrders() {
+    public ResponseEntity<List<OrderDTO>> getAllOrders(@RequestParam(required = false) Long storeId) {
+        if (storeId != null) {
+            return ResponseEntity.ok(orderService.getOrdersByStoreId(storeId));
+        }
         return ResponseEntity.ok(orderService.getAllOrders());
     }
 
@@ -30,8 +33,8 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<OrderDTO> createOrder(@RequestBody OrderDTO dto) {
-        return new ResponseEntity<>(orderService.createOrder(dto), HttpStatus.CREATED);
+    public ResponseEntity<OrderDTO> createOrder(@RequestBody OrderDTO dto, @RequestParam(required = false) Long storeId) {
+        return new ResponseEntity<>(orderService.createOrder(dto, storeId), HttpStatus.CREATED);
     }
 
     @PatchMapping("/{id}/status")

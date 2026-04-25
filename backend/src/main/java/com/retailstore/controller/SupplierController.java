@@ -16,16 +16,18 @@ public class SupplierController {
     private SupplierRepository supplierRepository;
 
     @GetMapping
-    public List<Supplier> getAllSuppliers() {
+    public List<Supplier> getAllSuppliers(@RequestParam(required = false) Long storeId) {
+        if (storeId != null) return supplierRepository.findByStoreId(storeId);
         return supplierRepository.findAll();
     }
 
     @PostMapping
-    public ResponseEntity<?> createSupplier(@RequestBody Supplier supplier) {
+    public ResponseEntity<?> createSupplier(@RequestBody Supplier supplier, @RequestParam(required = false) Long storeId) {
         try {
             if (supplier.getStatus() == null) supplier.setStatus("Active");
             if (supplier.getTotalOrdersValue() == null) supplier.setTotalOrdersValue(0.0);
             if (supplier.getPendingDeliveries() == null) supplier.setPendingDeliveries(0);
+            if (storeId != null) supplier.setStoreId(storeId);
             Supplier saved = supplierRepository.save(supplier);
             return new ResponseEntity<>(saved, HttpStatus.CREATED);
         } catch (Exception e) {

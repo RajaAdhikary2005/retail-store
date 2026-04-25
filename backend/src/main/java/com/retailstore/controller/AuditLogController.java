@@ -14,12 +14,14 @@ public class AuditLogController {
     private AuditLogRepository auditLogRepository;
 
     @GetMapping
-    public List<AuditLog> getAllLogs() {
+    public List<AuditLog> getAllLogs(@RequestParam(required = false) Long storeId) {
+        if (storeId != null) return auditLogRepository.findByStoreId(storeId);
         return auditLogRepository.findAll();
     }
 
     @PostMapping
-    public AuditLog createLog(@RequestBody AuditLog log) {
+    public AuditLog createLog(@RequestBody AuditLog log, @RequestParam(required = false) Long storeId) {
+        if (storeId != null) log.setStoreId(storeId);
         return auditLogRepository.save(log);
     }
 }

@@ -2,6 +2,9 @@ package com.retailstore.repository;
 
 import com.retailstore.model.Supplier;
 import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
 
 public interface SupplierRepository extends JpaRepository<Supplier, Long> {
+    List<Supplier> findByStoreId(Long storeId);
+    void deleteByStoreId(Long storeId);
 }

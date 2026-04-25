@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { User, Mail, Shield, LogOut, Check, AlertCircle } from 'lucide-react';
-import { type UserInfo, ROLES } from '../services/auth';
+import { User, Mail, Shield, LogOut, Check, AlertCircle, Trash2 } from 'lucide-react';
+import { type UserInfo, ROLES, deleteStoreApi } from '../services/auth';
 
 const API_BASE = 'https://retail-store-k6pr.onrender.com/api';
 
@@ -19,6 +19,12 @@ export default function Settings({ onLogout, user, onUpdateUser }: SettingsProps
   const [newPwd, setNewPwd] = useState('');
   const [pwdSaving, setPwdSaving] = useState(false);
   const [pwdMsg, setPwdMsg] = useState<{ text: string; ok: boolean } | null>(null);
+
+  // Delete store state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [deleteMsg, setDeleteMsg] = useState<{ text: string; ok: boolean } | null>(null);
 
   const handleUpdatePassword = async () => {
     if (!curPwd || newPwd.length < 6) return;
@@ -86,6 +92,27 @@ export default function Settings({ onLogout, user, onUpdateUser }: SettingsProps
     } finally {
       setSaving(false);
       setTimeout(() => setMsg(null), 3000);
+    }
+  };
+
+  const handleDeleteStore = async () => {
+    if (!userInfo.storeId) return;
+    setDeleting(true);
+    setDeleteMsg(null);
+    try {
+      const success = await deleteStoreApi(userInfo.storeId);
+      if (success) {
+        setDeleteMsg({ text: 'Store deleted successfully. Redirecting to login...', ok: true });
+        setTimeout(() => {
+          onLogout(); // Redirect to login/signup page
+        }, 2000);
+      } else {
+        setDeleteMsg({ text: 'Failed to delete store. Please try again.', ok: false });
+      }
+    } catch {
+      setDeleteMsg({ text: 'Network error', ok: false });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -172,7 +199,7 @@ export default function Settings({ onLogout, user, onUpdateUser }: SettingsProps
             </div>
           </div>
 
-          <div className="card">
+          <div className="card" style={{ marginBottom: 20 }}>
             <div className="card-header"><h3><Mail size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />Account Info</h3></div>
             <div className="card-body">
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
@@ -191,6 +218,76 @@ export default function Settings({ onLogout, user, onUpdateUser }: SettingsProps
               <button className="btn btn-danger" onClick={onLogout}><LogOut size={14} />Sign Out</button>
             </div>
           </div>
+
+          {/* Danger Zone — Admin only: Delete Store */}
+          {userInfo.role === 'admin' && userInfo.storeId && (
+            <div className="card" style={{ border: '1px solid rgba(239,68,68,0.3)' }}>
+              <div className="card-header" style={{ background: 'rgba(239,68,68,0.05)' }}>
+                <h3 style={{ color: '#ef4444' }}>
+                  <Trash2 size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />
+                  Danger Zone
+                </h3>
+              </div>
+              <div className="card-body">
+                <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12 }}>
+                  Permanently delete your store and <strong>all its data</strong> — including all users, products, customers, orders, suppliers, and more. This action <strong>cannot be undone</strong>. Other stores will not be affected.
+                </p>
+
+                {!showDeleteConfirm ? (
+                  <button
+                    className="btn btn-danger"
+                    onClick={() => setShowDeleteConfirm(true)}
+                    style={{ gap: 6 }}
+                  >
+                    <Trash2 size={14} /> Delete This Store
+                  </button>
+                ) : (
+                  <div style={{ padding: 16, background: 'rgba(239,68,68,0.06)', borderRadius: 8, border: '1px solid rgba(239,68,68,0.15)' }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: '#ef4444', marginBottom: 12 }}>
+                      ⚠️ Are you absolutely sure? Type <strong>DELETE</strong> to confirm:
+                    </p>
+                    <input
+                      className="form-input"
+                      value={deleteConfirmText}
+                      onChange={e => setDeleteConfirmText(e.target.value)}
+                      placeholder='Type "DELETE" to confirm'
+                      style={{ marginBottom: 12, borderColor: 'rgba(239,68,68,0.3)' }}
+                    />
+
+                    {deleteMsg && (
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 8, marginBottom: 12,
+                        fontSize: 13, fontWeight: 500,
+                        background: deleteMsg.ok ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                        color: deleteMsg.ok ? '#10b981' : '#ef4444',
+                      }}>
+                        {deleteMsg.ok ? <Check size={14} /> : <AlertCircle size={14} />}
+                        {deleteMsg.text}
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(''); setDeleteMsg(null); }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        className="btn btn-danger"
+                        disabled={deleteConfirmText !== 'DELETE' || deleting}
+                        onClick={handleDeleteStore}
+                        style={{ gap: 6 }}
+                      >
+                        <Trash2 size={14} />
+                        {deleting ? 'Deleting...' : 'Permanently Delete Store'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </>

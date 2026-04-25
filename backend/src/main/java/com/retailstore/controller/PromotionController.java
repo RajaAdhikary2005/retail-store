@@ -15,12 +15,14 @@ public class PromotionController {
     private PromotionRepository promotionRepository;
 
     @GetMapping
-    public List<Promotion> getAllPromotions() {
+    public List<Promotion> getAllPromotions(@RequestParam(required = false) Long storeId) {
+        if (storeId != null) return promotionRepository.findByStoreId(storeId);
         return promotionRepository.findAll();
     }
 
     @PostMapping
-    public Promotion createPromotion(@RequestBody Promotion promotion) {
+    public Promotion createPromotion(@RequestBody Promotion promotion, @RequestParam(required = false) Long storeId) {
+        if (storeId != null) promotion.setStoreId(storeId);
         return promotionRepository.save(promotion);
     }
 

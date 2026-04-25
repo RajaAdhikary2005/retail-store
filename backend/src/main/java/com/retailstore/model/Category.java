@@ -22,6 +22,9 @@ public class Category {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "store_id")
+    private Long storeId;
+
     @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
     private List<Product> products;
 
@@ -43,6 +46,8 @@ public class Category {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public List<Product> getProducts() { return products; }
     public void setProducts(List<Product> products) { this.products = products; }
+    public Long getStoreId() { return storeId; }
+    public void setStoreId(Long storeId) { this.storeId = storeId; }
 
     @PrePersist
     protected void onCreate() { this.createdAt = LocalDateTime.now(); }

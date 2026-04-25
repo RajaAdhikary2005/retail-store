@@ -16,6 +16,7 @@ public class ReturnRequest {
     private String reason;
     private String status; // Pending, Approved, Rejected
     private LocalDateTime createdAt;
+    private Long storeId;
 
     public ReturnRequest() {}
 
@@ -32,6 +33,8 @@ public class ReturnRequest {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public Long getStoreId() { return storeId; }
+    public void setStoreId(Long storeId) { this.storeId = storeId; }
 
     @PrePersist
     protected void onCreate() {
