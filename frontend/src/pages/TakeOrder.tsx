@@ -391,28 +391,30 @@ export default function TakeOrder({ userName }: Props) {
       {/* Add New Customer Modal */}
       {showNewCustomer && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: 420 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <div className="modal-content" style={{ maxWidth: 460 }}>
+            <div className="modal-header">
               <h3 style={{ margin: 0 }}><UserPlus size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} />Add New Customer</h3>
-              <button className="btn btn-icon" onClick={() => setShowNewCustomer(false)}><X size={18} /></button>
+              <button className="close-btn" onClick={() => setShowNewCustomer(false)}><X size={18} /></button>
             </div>
-            <div className="form-group">
-              <label className="form-label">Full Name *</label>
-              <input className="form-input" placeholder="Customer name" value={newCustName} onChange={e => setNewCustName(e.target.value)} />
+            <div className="modal-body">
+              <div className="form-group">
+                <label className="form-label">Full Name *</label>
+                <input className="form-input" placeholder="Customer name" value={newCustName} onChange={e => setNewCustName(e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Email *</label>
+                <input className="form-input" type="email" placeholder="email@example.com" value={newCustEmail} onChange={e => setNewCustEmail(e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Phone *</label>
+                <input className="form-input" placeholder="Phone number" value={newCustPhone} onChange={e => setNewCustPhone(e.target.value)} />
+              </div>
+              <button className="btn btn-primary" style={{ width: '100%', marginTop: 12, justifyContent: 'center', padding: '12px 18px' }}
+                disabled={!newCustName.trim() || !newCustEmail.trim() || !newCustPhone.trim()}
+                onClick={handleAddNewCustomer}>
+                Save & Select Customer
+              </button>
             </div>
-            <div className="form-group">
-              <label className="form-label">Email *</label>
-              <input className="form-input" type="email" placeholder="email@example.com" value={newCustEmail} onChange={e => setNewCustEmail(e.target.value)} />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Phone *</label>
-              <input className="form-input" placeholder="Phone number" value={newCustPhone} onChange={e => setNewCustPhone(e.target.value)} />
-            </div>
-            <button className="btn btn-primary" style={{ width: '100%', marginTop: 8, justifyContent: 'center' }}
-              disabled={!newCustName.trim() || !newCustEmail.trim() || !newCustPhone.trim()}
-              onClick={handleAddNewCustomer}>
-              Save & Select Customer
-            </button>
           </div>
         </div>
       )}

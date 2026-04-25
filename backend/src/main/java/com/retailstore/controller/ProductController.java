@@ -44,4 +44,12 @@ public class ProductController {
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/stock")
+    public ResponseEntity<ProductDTO> updateStock(
+            @PathVariable Integer id,
+            @RequestBody java.util.Map<String, Object> body) {
+        int additionalStock = ((Number) body.get("additionalStock")).intValue();
+        return ResponseEntity.ok(productService.addStock(id, additionalStock));
+    }
 }

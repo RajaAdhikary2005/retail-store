@@ -135,7 +135,11 @@ export async function deleteSupplier(id: number): Promise<void> {
 }
 
 // ===================== PURCHASE ORDERS =====================
-export interface PurchaseOrder { id: number; supplierId: number; supplierName: string; productNames: string; totalAmount: number; status: string; orderDate: string; }
+export interface PurchaseOrder {
+  id: number; supplierId: number; supplierName: string; productNames: string;
+  totalAmount: number; status: string; orderDate: string;
+  orderedQuantity?: number; receivedQuantity?: number;
+}
 
 export async function fetchPOs(): Promise<PurchaseOrder[]> {
   return apiFetch('/purchase-orders', () => []);
@@ -143,6 +147,14 @@ export async function fetchPOs(): Promise<PurchaseOrder[]> {
 
 export async function createPO(po: any): Promise<PurchaseOrder> {
   return apiPost('/purchase-orders', po);
+}
+
+export async function updatePOStatus(id: number, status: string, receivedQuantity?: number): Promise<PurchaseOrder> {
+  return apiPatch(`/purchase-orders/${id}/status`, { status, receivedQuantity });
+}
+
+export async function updateProductStock(productId: number, additionalStock: number): Promise<any> {
+  return apiPatch(`/products/${productId}/stock`, { additionalStock });
 }
 
 // ===================== DUES =====================

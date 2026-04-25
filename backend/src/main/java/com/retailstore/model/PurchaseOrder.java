@@ -14,9 +14,11 @@ public class PurchaseOrder {
     private String supplierName;
     private String productNames; // comma separated for simplicity or use a relation
     private Double totalAmount;
-    private String status; // Pending, Received, Cancelled
+    private String status; // Pending, Received, Partially Received, Cancelled
     private LocalDateTime orderDate;
     private LocalDateTime deliveryDate;
+    private Integer orderedQuantity;
+    private Integer receivedQuantity;
 
     public PurchaseOrder() {}
 
@@ -35,9 +37,14 @@ public class PurchaseOrder {
     public LocalDateTime getOrderDate() { return orderDate; }
     public LocalDateTime getDeliveryDate() { return deliveryDate; }
     public void setDeliveryDate(LocalDateTime deliveryDate) { this.deliveryDate = deliveryDate; }
+    public Integer getOrderedQuantity() { return orderedQuantity; }
+    public void setOrderedQuantity(Integer orderedQuantity) { this.orderedQuantity = orderedQuantity; }
+    public Integer getReceivedQuantity() { return receivedQuantity; }
+    public void setReceivedQuantity(Integer receivedQuantity) { this.receivedQuantity = receivedQuantity; }
 
     @PrePersist
     protected void onCreate() {
         orderDate = LocalDateTime.now();
+        if (receivedQuantity == null) receivedQuantity = 0;
     }
 }

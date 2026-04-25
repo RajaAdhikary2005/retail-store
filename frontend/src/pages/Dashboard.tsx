@@ -17,7 +17,14 @@ export default function Dashboard() {
 
   useEffect(() => {
     Promise.all([fetchDashboardStats(), fetchOrders(), fetchAnalytics()]).then(([s, o, a]) => {
-      setStats(s); setRecentOrders(o.slice(0, 5)); setSalesTrends(a.salesTrends);
+      setStats(s);
+      // Sort orders by date descending so newest appear first
+      const sorted = [...o].sort((a, b) => {
+        const da = a.orderDate ? new Date(a.orderDate).getTime() : 0;
+        const db = b.orderDate ? new Date(b.orderDate).getTime() : 0;
+        return db - da;
+      });
+      setRecentOrders(sorted.slice(0, 5)); setSalesTrends(a.salesTrends);
       setTopProducts(a.topProducts); setCatDist(a.categoryDistribution); setLoading(false);
     });
   }, []);

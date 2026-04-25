@@ -81,6 +81,13 @@ public class ProductService {
         productRepository.deleteById(id);
     }
 
+    public ProductDTO addStock(Integer id, int additionalStock) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+        product.setStockQuantity((product.getStockQuantity() != null ? product.getStockQuantity() : 0) + additionalStock);
+        return toDTO(productRepository.save(product));
+    }
+
     private ProductDTO toDTO(Product product) {
         ProductDTO dto = new ProductDTO();
         dto.setId(product.getId());
