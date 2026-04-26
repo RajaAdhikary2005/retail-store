@@ -144,6 +144,17 @@ export default function Login({ onLogin }: LoginProps) {
       }
     }
 
+    if (mode === 'forgot') {
+      // --- Forgot Password Flow ---
+      if (!email.trim()) {
+        setError('Please enter your email address');
+        return;
+      }
+      setSuccessMsg('If an account with this email exists, a password reset link has been sent.');
+      setEmail('');
+      return;
+    }
+
     // --- Login Flow ---
     loginApi(email.toLowerCase(), password)
       .then(user => {
