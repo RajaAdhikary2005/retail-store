@@ -152,6 +152,16 @@ public class AuthController {
         return ResponseEntity.notFound().build();
     }
 
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isPresent()) {
+            userRepository.delete(userOpt.get());
+            return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
+        }
+        return ResponseEntity.notFound().build();
+    }
+
     @PutMapping("/update-profile")
     public ResponseEntity<?> updateProfile(@RequestBody Map<String, String> body) {
         String currentEmail = body.get("currentEmail");

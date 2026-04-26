@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Shield, UserX, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { Users, Shield, UserX, ArrowUpCircle, ArrowDownCircle, Trash2 } from 'lucide-react';
 import { fetchUsers, logAction } from '../services/api';
 import { ROLES, type UserRole, type UserInfo } from '../services/auth';
 
@@ -61,6 +61,20 @@ export default function UserManagement({ user }: UserManagementProps) {
     }
   };
 
+  const deleteUser = async (u: ManagedUser) => {
+    if (!confirm(`Are you sure you want to permanently delete ${u.name}?`)) return;
+    try {
+      await fetch(`https://retail-store-k6pr.onrender.com/api/auth/users/${u.id}`, {
+        method: 'DELETE',
+      });
+      setUsers(prev => prev.filter(user => user.id !== u.id));
+      logAction({ user: user?.name || 'Admin', action: `Deleted user`, target: `${u.name} (${u.role})`, severity: 'warning', iconStr: 'Trash2' });
+      flash(`${u.name} has been deleted.`);
+    } catch {
+      flash('Could not delete user. Please try again.');
+    }
+  };
+
   const toggleSuspend = (u: ManagedUser) => {
     const next = u.status === 'active' || u.status === 'approved' ? 'suspended' : 'active';
     updateUserStatus(u.id, next);
@@ -118,6 +132,9 @@ export default function UserManagement({ user }: UserManagementProps) {
             )}
             <button className={`btn btn-sm ${u.status === 'active' || u.status === 'approved' ? 'btn-secondary' : 'btn-success'}`} onClick={() => toggleSuspend(u)} style={{ padding: '4px 8px', fontSize: 11 }}>
               {u.status === 'active' || u.status === 'approved' ? <><UserX size={12} /> Suspend</> : <>✓ Activate</>}
+            </button>
+            <button className="btn btn-sm btn-danger" onClick={() => deleteUser(u)} style={{ padding: '4px 8px', fontSize: 11 }} title="Delete user">
+              <Trash2 size={12} /> Delete
             </button>
           </div>
         )}</td>
