@@ -35,7 +35,7 @@ public class CustomerService {
         return toDTO(customer);
     }
 
-    public CustomerDTO toDTO(Customer customer) {
+    private CustomerDTO toDTO(Customer customer) {
         CustomerDTO dto = new CustomerDTO();
         dto.setId(customer.getId());
         dto.setName(customer.getName());

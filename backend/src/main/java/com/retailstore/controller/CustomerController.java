@@ -37,7 +37,8 @@ public class CustomerController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createCustomer(@RequestBody Map<String, String> body, @RequestParam(required = false) Long storeId) {
+    public ResponseEntity<?> createCustomer(@RequestBody Map<String, String> body,
+            @RequestParam(required = false) Long storeId) {
         try {
             String name = body.getOrDefault("name", "").trim();
             String email = body.getOrDefault("email", "").trim();
@@ -54,7 +55,7 @@ public class CustomerController {
             if (customerRepository.findByEmail(email).isPresent()) {
                 // Return existing customer instead of error
                 Customer existing = customerRepository.findByEmail(email).get();
-                return ResponseEntity.ok(customerService.toDTO(existing));
+                return ResponseEntity.ok(existing);
             }
 
             Customer customer = new Customer();
@@ -65,10 +66,11 @@ public class CustomerController {
             customer.setCity(body.getOrDefault("city", null));
             customer.setState(body.getOrDefault("state", null));
             customer.setZipCode(body.getOrDefault("zipCode", null));
-            if (storeId != null) customer.setStoreId(storeId);
+            if (storeId != null)
+                customer.setStoreId(storeId);
 
             Customer saved = customerRepository.save(customer);
-            return new ResponseEntity<>(customerService.toDTO(saved), HttpStatus.CREATED);
+            return new ResponseEntity<>(saved, HttpStatus.CREATED);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to create customer: " + e.getMessage());
