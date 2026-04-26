@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Search, Download, Upload, Eye, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { fetchCustomers, exportToCSV, createCustomer } from '../services/api';
+import { Search, Download, Upload, Eye, X, ChevronLeft, ChevronRight, Edit2 } from 'lucide-react';
+import { fetchCustomers, exportToCSV, createCustomer, updateCustomer } from '../services/api';
 import BulkUpload from '../components/BulkUpload';
 import type { Customer } from '../types';
 import { type UserRole, ROLES } from '../services/auth';
@@ -14,6 +14,7 @@ export default function Customers({ globalSearch = '', userRole = 'admin' as Use
   const [page, setPage] = useState(1);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [editCustomer, setEditCustomer] = useState<Customer | null>(null);
   const perPage = 8;
 
   useEffect(() => { 
@@ -71,6 +72,24 @@ export default function Customers({ globalSearch = '', userRole = 'admin' as Use
     }
   };
 
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editCustomer) return;
+    const fd = new FormData(e.target as HTMLFormElement);
+    const data = {
+      name: fd.get('name') as string, email: fd.get('email') as string,
+      phone: fd.get('phone') as string, city: fd.get('city') as string,
+      state: fd.get('state') as string,
+    };
+    try {
+      const updated = await updateCustomer(editCustomer.id, data);
+      setCustomers(customers.map(c => c.id === updated.id ? { ...c, ...updated } : c));
+      setEditCustomer(null);
+    } catch (err: any) {
+      alert(err.message || 'Failed to update customer');
+    }
+  };
+
   if (loading) return <div className="loading-spinner"><div className="spinner" /></div>;
 
   return (
@@ -112,7 +131,10 @@ export default function Customers({ globalSearch = '', userRole = 'admin' as Use
                   <td style={{ fontWeight: 600 }}>{c.totalOrders}</td>
                   <td style={{ fontWeight: 600, color: 'var(--accent-green)' }}>₹{c.totalSpent.toFixed(2)}</td>
                   <td>
-                    <button className="btn btn-secondary btn-icon btn-sm" onClick={() => setSelectedCustomer(c)}><Eye size={13} /></button>
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      <button className="btn btn-secondary btn-icon btn-sm" onClick={() => setSelectedCustomer(c)} title="View"><Eye size={13} /></button>
+                      <button className="btn btn-primary btn-icon btn-sm" onClick={() => setEditCustomer(c)} title="Edit"><Edit2 size={13} /></button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -198,6 +220,30 @@ export default function Customers({ globalSearch = '', userRole = 'admin' as Use
           onSuccess={() => fetchCustomers().then(setCustomers)}
           onUpload={handleBulkUpload}
         />
+      )}
+
+      {editCustomer && (
+        <div className="modal-overlay" onClick={() => setEditCustomer(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Edit Customer</h3>
+              <button className="btn btn-icon btn-secondary btn-sm" onClick={() => setEditCustomer(null)}><X size={14} /></button>
+            </div>
+            <div className="modal-body">
+              <form onSubmit={handleSaveEdit}>
+                <div className="form-group"><label>Name *</label><input name="name" required className="form-input" defaultValue={editCustomer.name} /></div>
+                <div className="form-group"><label>Email *</label><input name="email" required type="email" className="form-input" defaultValue={editCustomer.email} /></div>
+                <div className="form-group"><label>Phone</label><input name="phone" className="form-input" defaultValue={editCustomer.phone} /></div>
+                <div className="form-group"><label>City</label><input name="city" className="form-input" defaultValue={editCustomer.city} /></div>
+                <div className="form-group"><label>State</label><input name="state" className="form-input" defaultValue={editCustomer.state} /></div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
+                  <button type="button" className="btn btn-secondary" onClick={() => setEditCustomer(null)}>Cancel</button>
+                  <button type="submit" className="btn btn-primary">Save Changes</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

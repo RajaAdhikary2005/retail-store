@@ -156,6 +156,10 @@ export async function createCustomer(customer: any): Promise<Customer> {
   return apiPost('/customers', customer);
 }
 
+export async function updateCustomer(id: number, customer: any): Promise<Customer> {
+  return apiPut(`/customers/${id}`, customer);
+}
+
 // ===================== ORDERS =====================
 export async function fetchOrders(): Promise<Order[]> {
   return apiFetch('/orders', () => []);

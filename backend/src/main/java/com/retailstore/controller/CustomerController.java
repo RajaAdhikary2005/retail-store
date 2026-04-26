@@ -74,4 +74,34 @@ public class CustomerController {
                     .body("Failed to create customer: " + e.getMessage());
         }
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateCustomer(@PathVariable Integer id, @RequestBody Map<String, String> body) {
+        try {
+            Customer customer = customerRepository.findById(id).orElseThrow(() -> new RuntimeException("Customer not found"));
+            String name = body.getOrDefault("name", null);
+            String email = body.getOrDefault("email", null);
+            String phone = body.getOrDefault("phone", null);
+            
+            if (name != null) customer.setName(name);
+            if (email != null) {
+                if (!email.equals(customer.getEmail()) && customerRepository.findByEmail(email).isPresent()) {
+                    return ResponseEntity.badRequest().body("Customer email already exists.");
+                }
+                customer.setEmail(email);
+            }
+            if (phone != null) customer.setPhone(phone.isEmpty() ? null : phone);
+            
+            if (body.containsKey("address")) customer.setAddress(body.get("address"));
+            if (body.containsKey("city")) customer.setCity(body.get("city"));
+            if (body.containsKey("state")) customer.setState(body.get("state"));
+            if (body.containsKey("zipCode")) customer.setZipCode(body.get("zipCode"));
+
+            Customer saved = customerRepository.save(customer);
+            return ResponseEntity.ok(saved);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to update customer: " + e.getMessage());
+        }
+    }
 }
