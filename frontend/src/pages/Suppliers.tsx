@@ -63,6 +63,13 @@ export default function Suppliers({ userRole = 'admin' }: Props) {
 
   const handleSaveSupplier = async () => {
     if (!form.name.trim()) return;
+
+    const isDuplicate = suppliers.some(s => s.name.toLowerCase() === form.name.trim().toLowerCase());
+    if (isDuplicate) {
+      setSupplierMsg('✗ Supplier name already exists. Please edit the existing supplier instead.');
+      return;
+    }
+
     setSaving(true);
     setSupplierMsg(null);
     try {

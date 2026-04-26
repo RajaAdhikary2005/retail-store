@@ -120,6 +120,16 @@ export default function TakeOrder({ userName }: Props) {
 
   const handleAddNewCustomer = async () => {
     if (!newCustName.trim() || !newCustEmail.trim() || !newCustPhone.trim()) return;
+
+    const isDuplicate = customers.some(c => 
+      (c.email && c.email.toLowerCase() === newCustEmail.trim().toLowerCase()) || 
+      (c.phone && c.phone === newCustPhone.trim())
+    );
+    if (isDuplicate) {
+      setOrderError('A customer with this email or phone already exists. Please select them from the search bar instead.');
+      return;
+    }
+
     try {
       const c = await createCustomer({ name: newCustName.trim(), email: newCustEmail.trim(), phone: newCustPhone.trim() });
       if (c && c.id) {
@@ -288,6 +298,11 @@ export default function TakeOrder({ userName }: Props) {
                       ))}
                     </div>
                   )}
+                </div>
+                <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center' }}>
+                  <button className="btn btn-sm btn-secondary" style={{ fontSize: 11, gap: 4 }} onClick={() => setShowNewCustomer(true)}>
+                    <UserPlus size={12} /> Add New Customer
+                  </button>
                 </div>
               </>
             )}

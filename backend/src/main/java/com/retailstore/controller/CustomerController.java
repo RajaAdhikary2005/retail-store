@@ -53,9 +53,7 @@ public class CustomerController {
 
             // Check if email already exists
             if (customerRepository.findByEmail(email).isPresent()) {
-                // Return existing customer instead of error
-                Customer existing = customerRepository.findByEmail(email).get();
-                return ResponseEntity.ok(existing);
+                return ResponseEntity.badRequest().body("Customer email already exists. Please edit the existing customer instead.");
             }
 
             Customer customer = new Customer();

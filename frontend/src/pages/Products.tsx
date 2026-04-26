@@ -63,6 +63,15 @@ export default function Products({ globalSearch = '', userRole = 'admin' as User
       name: fd.get('name') as string, categoryName: fd.get('category') as string,
       price: parseFloat(fd.get('price') as string), stockQuantity: parseInt(fd.get('stockQuantity') as string),
     };
+
+    if (!editProduct) {
+      const isDuplicate = products.some(p => p.name.toLowerCase() === data.name.toLowerCase());
+      if (isDuplicate) {
+        alert('Product name already exists. Please edit the existing one instead of adding a duplicate.');
+        return;
+      }
+    }
+
     if (editProduct) {
       await updateProduct(editProduct.id, data);
     } else {
