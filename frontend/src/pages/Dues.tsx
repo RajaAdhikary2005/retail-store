@@ -48,9 +48,11 @@ export default function Dues({ userRole }: DuesProps) {
     fetchSuppliers().then(setSuppliers);
   }, []);
 
-  const filteredDues = dues.filter(d =>
-    d.entityName.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredDues = dues.filter(d => {
+    const dueIdStr = `DUE-${d.id.toString().padStart(4, '0')}`.toLowerCase();
+    return d.entityName.toLowerCase().includes(search.toLowerCase()) || 
+           dueIdStr.includes(search.toLowerCase());
+  });
 
   const totalDue = dues.reduce((a, d) => a + d.totalDue, 0);
   const overdueCount = dues.filter(d => d.status === 'Overdue').length;
@@ -199,7 +201,7 @@ export default function Dues({ userRole }: DuesProps) {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>ID</th>
+                  <th>Due Ref</th>
                   <th>{tab === 'customer' ? 'Customer' : 'Supplier'} Name</th>
                   <th>Contact Info</th>
                   <th>Total Due</th>
@@ -211,7 +213,7 @@ export default function Dues({ userRole }: DuesProps) {
               <tbody>
                 {filteredDues.map(d => (
                   <tr key={d.id} style={{ opacity: d.status === 'Paid' || d.totalDue <= 0 ? 0.6 : 1 }}>
-                    <td>#{d.id}</td>
+                    <td style={{ fontWeight: 600, color: 'var(--text-muted)' }}>DUE-{d.id.toString().padStart(4, '0')}</td>
                     <td style={{ fontWeight: 600 }}>{d.entityName}</td>
                     <td>{d.contact}</td>
                     <td style={{ fontWeight: 700, color: d.totalDue > 0 ? 'var(--accent-red)' : 'var(--accent-green)' }}>

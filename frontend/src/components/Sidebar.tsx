@@ -56,7 +56,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, userRole, use
   return (
     <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
       <div className="sidebar-brand">
-        <div className="brand-icon">RS</div>
+        <img src="/retailstore-logo.png" alt="RetailStore" style={{ width: 38, height: 38, borderRadius: 'var(--radius-sm)', objectFit: 'cover' }} />
         <div>
           <h2>RetailStore</h2>
           <span>Management System</span>

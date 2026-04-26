@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Search, Download, Eye, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { fetchCustomers, exportToCSV } from '../services/api';
+import { Search, Download, Upload, Eye, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { fetchCustomers, exportToCSV, createCustomer } from '../services/api';
+import BulkUpload from '../components/BulkUpload';
 import type { Customer } from '../types';
 import { type UserRole, ROLES } from '../services/auth';
 
@@ -11,6 +12,7 @@ export default function Customers({ globalSearch = '', userRole = 'admin' as Use
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const perPage = 8;
 
@@ -53,6 +55,22 @@ export default function Customers({ globalSearch = '', userRole = 'admin' as Use
     ? orders.filter(o => o.customerId === selectedCustomer.id)
     : [];
 
+  const handleBulkUpload = async (data: any[]) => {
+    for (const row of data) {
+      if (row.name && row.email) {
+        await createCustomer({
+          name: row.name,
+          email: row.email,
+          phone: row.phone || '',
+          address: row.address || '',
+          city: row.city || '',
+          state: row.state || '',
+          zipCode: row.zipcode || row.zip_code || '',
+        });
+      }
+    }
+  };
+
   if (loading) return <div className="loading-spinner"><div className="spinner" /></div>;
 
   return (
@@ -63,7 +81,12 @@ export default function Customers({ globalSearch = '', userRole = 'admin' as Use
           <div className="search-box"><Search size={16} /><input placeholder="Search customers..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} /></div>
         </div>
         <div className="toolbar-right">
-          {canExport && <button className="btn btn-secondary" onClick={() => exportToCSV(customers as unknown as Record<string, unknown>[], 'customers')}><Download size={14} />Export CSV</button>}
+          {canExport && (
+            <>
+              <button className="btn btn-secondary" onClick={() => setShowBulkUpload(true)}><Upload size={14} />Import CSV</button>
+              <button className="btn btn-secondary" onClick={() => exportToCSV(customers as unknown as Record<string, unknown>[], 'customers')}><Download size={14} />Export CSV</button>
+            </>
+          )}
         </div>
       </div>
 
@@ -166,6 +189,15 @@ export default function Customers({ globalSearch = '', userRole = 'admin' as Use
             </div>
           </div>
         </div>
+      )}
+
+      {showBulkUpload && (
+        <BulkUpload 
+          type="customers" 
+          onClose={() => setShowBulkUpload(false)} 
+          onSuccess={() => fetchCustomers().then(setCustomers)}
+          onUpload={handleBulkUpload}
+        />
       )}
     </>
   );

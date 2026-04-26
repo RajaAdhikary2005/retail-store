@@ -145,8 +145,8 @@ export default function Returns({ userRole, userName = 'User' }: Props) {
               )}
               {filteredReturns.map(r => (
                 <tr key={r.id}>
-                  <td>#{r.id}</td>
-                  <td>#{r.orderId}</td>
+                  <td style={{ fontWeight: 600 }}>RET-{r.id.toString().padStart(4, '0')}</td>
+                  <td>INV-{r.orderId.toString().padStart(4, '0')}</td>
                   <td style={{ fontWeight: 600 }}>{r.customerName}</td>
                   <td style={{ fontWeight: 700 }}>₹{r.amount.toLocaleString()}</td>
                   <td>{r.reason}</td>

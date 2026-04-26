@@ -11,6 +11,7 @@ export default function Promotions() {
   });
   const [copied, setCopied] = useState<string | null>(null);
   const [tab, setTab] = useState('all');
+  const [formMsg, setFormMsg] = useState<string | null>(null);
 
   const loadPromos = () => {
     setLoading(true);
@@ -22,10 +23,28 @@ export default function Promotions() {
   const filtered = tab === 'all' ? promos : promos.filter(p => p.status.toLowerCase() === tab);
 
   const handleCreate = () => {
-    createPromotion({ ...form, status: 'Active' }).then(() => {
+    if (!form.name.trim() || !form.code.trim()) return;
+    setFormMsg(null);
+    const payload = {
+      ...form,
+      status: 'Active',
+      // Convert date strings to datetime format for backend LocalDateTime
+      startDate: form.startDate ? form.startDate + 'T00:00:00' : null,
+      endDate: form.endDate ? form.endDate + 'T23:59:59' : null,
+    };
+    createPromotion(payload).then(() => {
       setShowModal(false);
+      setFormMsg(null);
       setForm({ name: '', code: '', type: 'Percentage', discountValue: 0, startDate: '', endDate: '', description: '' });
       loadPromos();
+    }).catch((err: any) => {
+      const msg = err?.message || '';
+      if (msg.toLowerCase().includes('json') || msg.toLowerCase().includes('unexpected token'))
+        setFormMsg('Could not create the promotion — server communication error. Please try again.');
+      else if (msg.toLowerCase().includes('failed to fetch') || msg.toLowerCase().includes('network'))
+        setFormMsg('Unable to connect to the server. Please check your connection.');
+      else
+        setFormMsg(msg || 'Failed to create promotion. Please try again.');
     });
   };
 
@@ -145,8 +164,14 @@ export default function Promotions() {
                   <input className="form-input" type="date" value={form.endDate} onChange={e => setForm({...form, endDate: e.target.value})} />
                 </div>
               </div>
+              {formMsg && (
+                <div style={{ padding: '10px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, marginTop: 8,
+                  background: 'var(--accent-red-light)', color: 'var(--accent-red)' }}>
+                  {formMsg}
+                </div>
+              )}
               <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
-                <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setShowModal(false)}>Cancel</button>
+                <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => { setShowModal(false); setFormMsg(null); }}>Cancel</button>
                 <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleCreate} disabled={!form.name || !form.code}>Create Promo</button>
               </div>
             </div>

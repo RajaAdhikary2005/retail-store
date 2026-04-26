@@ -137,30 +137,52 @@ export default function TakeOrder({ userName }: Props) {
 
   const handleCheckout = async () => {
     setOrderError('');
-    if (!cart.length) { setOrderError('Add items to cart'); return; }
-    if (!selectedCustomer && !customerName.trim()) { setOrderError('Select or enter a customer name'); return; }
+    if (!cart.length) { setOrderError('Please add at least one item to the cart.'); return; }
+    if (!selectedCustomer && !customerName.trim()) { setOrderError('Please select or enter a customer name.'); return; }
 
     setProcessing(true);
-    const orderData = {
-      customerId: selectedCustomer?.id || 0,
-      customerName: selectedCustomer?.name || customerName.trim(),
-      items: cart.map(item => ({
-        productId: item.productId,
-        productName: item.name,
-        quantity: item.quantity,
-        unitPrice: item.price,
-        totalPrice: item.price * item.quantity
-      })),
-      totalAmount: total,
-      status: 'Completed',
-      paymentMethod,
-      orderDate: new Date().toISOString(),
-      processedBy: userName,
-    };
-
     try {
+      // If no selected customer but we have a name, create a walk-in customer first
+      let custId = selectedCustomer?.id || 0;
+      let custName = selectedCustomer?.name || customerName.trim();
+
+      if (!selectedCustomer && customerName.trim()) {
+        try {
+          const newCust = await createCustomer({ name: customerName.trim(), email: '', phone: '' });
+          if (newCust && newCust.id) {
+            custId = newCust.id;
+            custName = newCust.name;
+          }
+        } catch {
+          // If customer creation fails, we still try the order
+        }
+      }
+
+      if (!custId || custId === 0) {
+        setOrderError('Could not identify the customer. Please select an existing customer or add a new one.');
+        setProcessing(false);
+        return;
+      }
+
+      const orderData = {
+        customerId: custId,
+        customerName: custName,
+        items: cart.map(item => ({
+          productId: item.productId,
+          productName: item.name,
+          quantity: item.quantity,
+          unitPrice: item.price,
+          totalPrice: item.price * item.quantity
+        })),
+        totalAmount: total,
+        status: 'Completed',
+        paymentMethod,
+        orderDate: new Date().toISOString(),
+        processedBy: userName,
+      };
+
       await createOrder(orderData);
-      logAction({ user: userName, action: 'Completed order', target: `Customer: ${customerName}, Total: ₹${total}`, severity: 'info', iconStr: 'Plus' });
+      logAction({ user: userName, action: 'Completed order', target: `Customer: ${custName}, Total: ₹${total}`, severity: 'info', iconStr: 'Plus' });
       setOrderComplete(true);
       setCart([]);
       setSelectedCustomer(null);
@@ -171,7 +193,17 @@ export default function TakeOrder({ userName }: Props) {
       setUseLoyalty(false);
       setLoyaltyDiscount(0);
     } catch (err: any) {
-      setOrderError(err?.message || 'Failed to complete order. Please try again.');
+      const msg = err?.message || '';
+      if (msg.toLowerCase().includes('customer not found'))
+        setOrderError('Customer not found in the system. Please add a new customer first.');
+      else if (msg.toLowerCase().includes('product not found'))
+        setOrderError('One or more products in the cart are no longer available.');
+      else if (msg.toLowerCase().includes('json') || msg.toLowerCase().includes('unexpected token'))
+        setOrderError('There was a communication error with the server. Please try again.');
+      else if (msg.toLowerCase().includes('failed to fetch') || msg.toLowerCase().includes('network'))
+        setOrderError('Unable to connect to the server. Please check your connection.');
+      else
+        setOrderError(msg || 'Failed to complete order. Please try again.');
     } finally {
       setProcessing(false);
     }

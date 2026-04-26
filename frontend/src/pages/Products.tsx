@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Plus, Search, Edit2, Trash2, Download, X, ChevronLeft, ChevronRight, Lock } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Download, Upload, X, ChevronLeft, ChevronRight, Lock } from 'lucide-react';
 import { fetchProducts, deleteProduct, exportToCSV, createProduct, updateProduct } from '../services/api';
+import BulkUpload from '../components/BulkUpload';
 import type { Product } from '../types';
 import { type UserRole, canEditModule, canDeleteInModule, ROLES } from '../services/auth';
 
@@ -16,6 +17,7 @@ export default function Products({ globalSearch = '', userRole = 'admin' as User
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [page, setPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const perPage = 8;
 
@@ -70,6 +72,20 @@ export default function Products({ globalSearch = '', userRole = 'admin' as User
     setModalOpen(false);
   };
 
+  const handleBulkUpload = async (data: any[]) => {
+    // Process each row in sequence (or Promise.all)
+    for (const row of data) {
+      if (row.name && row.price) {
+        await createProduct({
+          name: row.name,
+          categoryName: row.category || 'General',
+          price: parseFloat(row.price) || 0,
+          stockQuantity: parseInt(row.stock || row.stockquantity || row.quantity) || 0,
+        });
+      }
+    }
+  };
+
   if (loading) return <div className="loading-spinner"><div className="spinner" /></div>;
 
   return (
@@ -84,7 +100,12 @@ export default function Products({ globalSearch = '', userRole = 'admin' as User
           </select>
         </div>
         <div className="toolbar-right">
-          {canExport && <button className="btn btn-secondary" onClick={() => exportToCSV(products as unknown as Record<string, unknown>[], 'products')}><Download size={14} />Export CSV</button>}
+          {canExport && (
+            <>
+              <button className="btn btn-secondary" onClick={() => setShowBulkUpload(true)}><Upload size={14} />Import CSV</button>
+              <button className="btn btn-secondary" onClick={() => exportToCSV(products as unknown as Record<string, unknown>[], 'products')}><Download size={14} />Export CSV</button>
+            </>
+          )}
           {canEdit ? (
             <button className="btn btn-primary" onClick={openAdd}><Plus size={14} />Add Product</button>
           ) : (
@@ -164,6 +185,15 @@ export default function Products({ globalSearch = '', userRole = 'admin' as User
             </form>
           </div>
         </div>
+      )}
+
+      {showBulkUpload && (
+        <BulkUpload 
+          type="products" 
+          onClose={() => setShowBulkUpload(false)} 
+          onSuccess={() => fetchProducts().then(setProducts)}
+          onUpload={handleBulkUpload}
+        />
       )}
     </>
   );

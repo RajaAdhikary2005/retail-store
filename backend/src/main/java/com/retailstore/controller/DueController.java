@@ -18,6 +18,7 @@ public class DueController {
 
     @GetMapping
     public List<Due> getAllDues(@RequestParam(required = false) String type, @RequestParam(required = false) Long storeId) {
+        if (storeId != null && type != null) return dueRepository.findByStoreIdAndType(storeId, type);
         if (storeId != null) return dueRepository.findByStoreId(storeId);
         if (type != null) return dueRepository.findByType(type);
         return dueRepository.findAll();

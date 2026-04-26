@@ -12,6 +12,22 @@ interface LoginProps {
   onNavigate: (page: string) => void;
 }
 
+// Convert raw API/network errors to user-friendly messages
+function friendlyError(msg: string): string {
+  if (!msg) return 'Something went wrong. Please try again.';
+  const lower = msg.toLowerCase();
+  if (lower.includes('failed to fetch') || lower.includes('networkerror') || lower.includes('network'))
+    return 'Unable to connect to the server. Please check your internet connection and try again.';
+  if (lower.includes('500') || lower.includes('internal server'))
+    return 'The server encountered an issue. Please try again in a moment.';
+  if (lower.includes('json') || lower.includes('unexpected token'))
+    return 'There was a communication error with the server. Please try again.';
+  if (lower.includes('timeout'))
+    return 'The request timed out. The server may be busy — please try again.';
+  // Return the message as-is if it already looks user-friendly
+  return msg;
+}
+
 export default function Login({ onLogin }: LoginProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,7 +57,7 @@ export default function Login({ onLogin }: LoginProps) {
     }
   }, [mode, signupRole]);
 
-  const resetForm = () => {
+  const resetForm = (clearMessages = true) => {
     setEmail('');
     setPassword('');
     setSignupName('');
@@ -49,7 +65,7 @@ export default function Login({ onLogin }: LoginProps) {
     setStoreName('');
     setSelectedStoreId(0);
     setError('');
-    setSuccessMsg('');
+    if (clearMessages) setSuccessMsg('');
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -98,7 +114,7 @@ export default function Login({ onLogin }: LoginProps) {
         }).then(user => {
           onLogin(user);
         }).catch(err => {
-          setError(err.message);
+          setError(friendlyError(err.message));
         });
         return;
       } else {
@@ -119,10 +135,10 @@ export default function Login({ onLogin }: LoginProps) {
           storeId: selectedStoreId,
           status: 'pending'
         }).then(() => {
-          setSuccessMsg('REQUEST SUBMITTED! YOU CAN LOGIN AFTER ADMIN APPROVES IT.');
-          resetForm();
+          resetForm(false);
+          setSuccessMsg('Your signup request has been submitted successfully! You will be able to login once the store admin approves your request.');
         }).catch(err => {
-          setError(err.message);
+          setError(friendlyError(err.message));
         });
         return;
       }
@@ -134,7 +150,7 @@ export default function Login({ onLogin }: LoginProps) {
         onLogin(user);
       })
       .catch(err => {
-        setError(err.message);
+        setError(friendlyError(err.message));
       });
   };
 

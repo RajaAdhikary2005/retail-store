@@ -80,7 +80,7 @@ function App() {
       case 'returns': return <Returns userRole={user.role} userName={user.name} />;
       case 'user-management': return <UserManagement user={user} />;
       case 'audit-logs': return <AuditLogs />;
-      case 'suppliers': return <Suppliers />;
+      case 'suppliers': return <Suppliers userRole={user.role} />;
       case 'promotions': return <Promotions />;
       case 'take-order': return <TakeOrder userRole={user.role} userName={user.name} />;
       case 'settings': return <Settings onLogout={handleLogout} user={user} onUpdateUser={setUser} />;
@@ -107,6 +107,10 @@ function App() {
 
         {/* Footer */}
         <footer className="app-footer">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <img src="/retailstore-logo.png" alt="RetailStore Logo" style={{ height: 32, borderRadius: 6 }} />
+            <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: '-0.3px', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>RetailStore</span>
+          </div>
           <div className="footer-brand">
             Made with <Heart size={12} style={{ color: '#ef4444', fill: '#ef4444', display: 'inline', verticalAlign: 'middle', margin: '0 3px' }} /> by Raja Adhikary
           </div>

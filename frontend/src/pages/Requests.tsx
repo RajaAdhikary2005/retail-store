@@ -19,8 +19,10 @@ export default function Requests({ user }: RequestsProps) {
     setLoading(true);
     // Filter by admin's storeId so they only see requests for their own store
     fetchUsers(currentStoreId).then(data => {
-      setPendingUsers(data.filter((u: any) => u.status === 'pending'));
-      setProcessedUsers(data.filter((u: any) => u.status === 'approved' || u.status === 'rejected'));
+      // Only show manager/staff users — admins auto-approve and should never appear here
+      const nonAdmins = data.filter((u: any) => u.role !== 'admin');
+      setPendingUsers(nonAdmins.filter((u: any) => u.status === 'pending'));
+      setProcessedUsers(nonAdmins.filter((u: any) => u.status === 'approved' || u.status === 'rejected'));
       setLoading(false);
     });
   };

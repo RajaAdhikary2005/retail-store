@@ -7,5 +7,6 @@ import java.util.List;
 public interface DueRepository extends JpaRepository<Due, Long> {
     List<Due> findByType(String type);
     List<Due> findByStoreId(Long storeId);
+    List<Due> findByStoreIdAndType(Long storeId, String type);
     void deleteByStoreId(Long storeId);
 }

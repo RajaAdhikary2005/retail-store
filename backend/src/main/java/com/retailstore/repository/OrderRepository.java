@@ -29,4 +29,10 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
                    "GROUP BY DATE_FORMAT(order_date, '%Y-%m') " +
                    "ORDER BY month", nativeQuery = true)
     List<Object[]> getMonthlySales();
+
+    @Query(value = "SELECT COUNT(*) FROM orders WHERE store_id = :storeId", nativeQuery = true)
+    Long countByStoreId(Long storeId);
+
+    @Query(value = "SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE store_id = :storeId AND status != 'Cancelled'", nativeQuery = true)
+    BigDecimal getTotalSalesByStoreId(Long storeId);
 }

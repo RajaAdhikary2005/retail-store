@@ -136,6 +136,22 @@ public class AuthController {
         return ResponseEntity.notFound().build();
     }
 
+    @PutMapping("/users/{id}/role")
+    public ResponseEntity<?> updateRole(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        String role = body.get("role");
+        if (role == null || (!role.equals("admin") && !role.equals("manager") && !role.equals("staff"))) {
+            return ResponseEntity.badRequest().body("Invalid role");
+        }
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            user.setRole(role);
+            userRepository.save(user);
+            return ResponseEntity.ok(user);
+        }
+        return ResponseEntity.notFound().build();
+    }
+
     @PutMapping("/update-profile")
     public ResponseEntity<?> updateProfile(@RequestBody Map<String, String> body) {
         String currentEmail = body.get("currentEmail");

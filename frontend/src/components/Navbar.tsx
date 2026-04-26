@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Search, Bell, Menu, LogOut, User, Settings, X, Sun, Moon } from 'lucide-react';
 import { type UserInfo, ROLES } from '../services/auth';
+import { fetchOrders, fetchProducts } from '../services/api';
 
 interface NavbarProps {
   pageTitle: string;
@@ -33,16 +34,18 @@ const pageTitles: Record<string, string> = {
   settings: 'Settings',
 };
 
-const notifications = [
-  { id: 1, text: 'Order #1004 is pending approval', time: '5 min ago', read: false },
-  { id: 2, text: 'Low stock alert: Ceramic Coffee Mug Set (3 left)', time: '1 hr ago', read: false },
-  { id: 3, text: 'New customer Divya Nair registered', time: '3 hrs ago', read: true },
-  { id: 4, text: 'Order #1001 delivered successfully', time: '1 day ago', read: true },
-];
+interface NotifItem {
+  id: number;
+  text: string;
+  time: string;
+  read: boolean;
+}
 
 export default function Navbar({ pageTitle, onToggleSidebar, onNavigate, onLogout, globalSearch, onGlobalSearchChange, darkMode, onToggleDark, user }: NavbarProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [notifications, setNotifications] = useState<NotifItem[]>([]);
+  const [notifLoaded, setNotifLoaded] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
@@ -56,7 +59,92 @@ export default function Navbar({ pageTitle, onToggleSidebar, onNavigate, onLogou
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
+  // Load real notifications from API data
+  useEffect(() => {
+    const loadNotifications = async () => {
+      try {
+        const [orders, products] = await Promise.all([fetchOrders(), fetchProducts()]);
+        const notifs: NotifItem[] = [];
+        let id = 1;
+
+        // Pending orders
+        const pending = orders.filter(o => o.status === 'Pending' || o.status === 'Processing');
+        pending.slice(0, 2).forEach(o => {
+          notifs.push({
+            id: id++,
+            text: `Order #${o.id} is ${o.status.toLowerCase()} — ₹${o.totalAmount?.toLocaleString('en-IN') || 0}`,
+            time: o.orderDate ? new Date(o.orderDate).toLocaleDateString() : 'Recently',
+            read: false,
+          });
+        });
+
+        // Low stock alerts
+        const lowStock = products.filter(p => p.stockQuantity <= 5 && p.stockQuantity > 0).slice(0, 2);
+        lowStock.forEach(p => {
+          notifs.push({
+            id: id++,
+            text: `Low stock alert: ${p.name} (${p.stockQuantity} left)`,
+            time: 'Now',
+            read: false,
+          });
+        });
+
+        // Out of stock
+        const outOfStock = products.filter(p => p.stockQuantity <= 0).slice(0, 1);
+        outOfStock.forEach(p => {
+          notifs.push({
+            id: id++,
+            text: `Out of stock: ${p.name}`,
+            time: 'Now',
+            read: false,
+          });
+        });
+
+        // Recent completed orders
+        const completed = orders.filter(o => o.status === 'Completed' || o.status === 'Delivered').slice(0, 2);
+        completed.forEach(o => {
+          notifs.push({
+            id: id++,
+            text: `Order #${o.id} for ${o.customerName || 'customer'} completed`,
+            time: o.orderDate ? new Date(o.orderDate).toLocaleDateString() : 'Recently',
+            read: true,
+          });
+        });
+
+        // If no real notifications, show a welcome message
+        if (notifs.length === 0) {
+          notifs.push({
+            id: id++,
+            text: 'Welcome! No new notifications right now.',
+            time: 'Now',
+            read: true,
+          });
+        }
+
+        setNotifications(notifs);
+        setNotifLoaded(true);
+      } catch {
+        setNotifications([{
+          id: 1,
+          text: 'Could not load notifications.',
+          time: 'Now',
+          read: true,
+        }]);
+        setNotifLoaded(true);
+      }
+    };
+
+    loadNotifications();
+    // Refresh every 60 seconds
+    const interval = setInterval(loadNotifications, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  const handleMarkAllRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
 
   return (
     <header className="navbar">
@@ -101,21 +189,35 @@ export default function Navbar({ pageTitle, onToggleSidebar, onNavigate, onLogou
             <div className="dropdown-menu notif-dropdown">
               <div className="dropdown-header">
                 <h4>Notifications</h4>
-                <span className="badge badge-processing" style={{ fontSize: 10 }}>{unreadCount} new</span>
+                {unreadCount > 0 && (
+                  <span className="badge badge-processing" style={{ fontSize: 10 }}>{unreadCount} new</span>
+                )}
               </div>
               <div className="dropdown-body">
-                {notifications.map(n => (
-                  <div key={n.id} className={`notif-item ${n.read ? '' : 'unread'}`}>
-                    <div className="notif-dot" style={{ background: n.read ? 'transparent' : 'var(--accent-blue)' }} />
-                    <div>
-                      <p className="notif-text">{n.text}</p>
-                      <span className="notif-time">{n.time}</span>
+                {!notifLoaded ? (
+                  <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Loading...</div>
+                ) : notifications.length === 0 ? (
+                  <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>No notifications</div>
+                ) : (
+                  notifications.map(n => (
+                    <div key={n.id} className={`notif-item ${n.read ? '' : 'unread'}`}>
+                      <div className="notif-dot" style={{ background: n.read ? 'transparent' : 'var(--accent-blue)' }} />
+                      <div>
+                        <p className="notif-text">{n.text}</p>
+                        <span className="notif-time">{n.time}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
               <div className="dropdown-footer">
-                <button className="btn btn-secondary btn-sm" style={{ width: '100%', justifyContent: 'center' }}>View All Notifications</button>
+                {unreadCount > 0 ? (
+                  <button className="btn btn-secondary btn-sm" style={{ width: '100%', justifyContent: 'center' }} onClick={handleMarkAllRead}>
+                    Mark All as Read
+                  </button>
+                ) : (
+                  <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-muted)', padding: '4px 0' }}>You're all caught up!</div>
+                )}
               </div>
             </div>
           )}

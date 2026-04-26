@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Search, Download, Eye, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { fetchOrders, updateOrderStatus, exportToCSV } from '../services/api';
+import { Search, Download, Upload, Eye, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { fetchOrders, updateOrderStatus, exportToCSV, createOrder, createCustomer } from '../services/api';
+import BulkUpload from '../components/BulkUpload';
 import { type Order, type Customer, type Product } from '../types';
 import { type UserRole, ROLES } from '../services/auth';
 
@@ -13,6 +14,7 @@ export default function Orders({ globalSearch = '', userRole = 'admin' as UserRo
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const perPage = 8;
 
@@ -36,11 +38,16 @@ export default function Orders({ globalSearch = '', userRole = 'admin' as UserRo
   }), [orders, customers]);
 
   const filtered = useMemo(() => {
-    return ordersWithLiveNames.filter(o =>
-      (o.customerName.toLowerCase().includes(search.toLowerCase()) || String(o.id).includes(search)) &&
-      o.customerName.toLowerCase().includes(globalSearch.toLowerCase()) &&
-      (!statusFilter || o.status === statusFilter)
-    );
+    return ordersWithLiveNames.filter(o => {
+      const invString = `INV-${o.id.toString().padStart(4, '0')}`.toLowerCase();
+      return (
+        (o.customerName.toLowerCase().includes(search.toLowerCase()) || 
+         invString.includes(search.toLowerCase()) || 
+         String(o.id).includes(search)) &&
+        o.customerName.toLowerCase().includes(globalSearch.toLowerCase()) &&
+        (!statusFilter || o.status === statusFilter)
+      );
+    });
   }, [ordersWithLiveNames, search, statusFilter, globalSearch]);
 
   const totalPages = Math.ceil(filtered.length / perPage);
@@ -50,6 +57,27 @@ export default function Orders({ globalSearch = '', userRole = 'admin' as UserRo
     await updateOrderStatus(id, status);
     setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
     if (selectedOrder?.id === id) setSelectedOrder(prev => prev ? { ...prev, status } : null);
+  };
+
+  const handleBulkUpload = async (data: any[]) => {
+    for (const row of data) {
+      if (row.customername && row.totalamount) {
+        // Try to find customer by name, or create dummy
+        let customerId = customers.find(c => c.name.toLowerCase() === String(row.customername).toLowerCase())?.id;
+        if (!customerId) {
+          const c = await createCustomer({ name: row.customername, email: 'bulk@import.com', phone: '0000000000' });
+          customerId = c.id;
+        }
+        await createOrder({
+          customerId: customerId || 1,
+          customerName: row.customername,
+          totalAmount: parseFloat(row.totalamount) || 0,
+          status: (row.status as Order['status']) || 'Completed',
+          shippingAddress: row.shippingaddress || 'Store Pickup',
+          items: [] // Bulk import doesn't easily map nested items
+        });
+      }
+    }
   };
 
   if (loading) return <div className="loading-spinner"><div className="spinner" /></div>;
@@ -66,7 +94,12 @@ export default function Orders({ globalSearch = '', userRole = 'admin' as UserRo
           </select>
         </div>
         <div className="toolbar-right">
-          {canExport && <button className="btn btn-secondary" onClick={() => exportToCSV(orders.map(o => ({ id: o.id, customer: o.customerName, date: o.orderDate, status: o.status, total: o.totalAmount })), 'orders')}><Download size={14} />Export CSV</button>}
+          {canExport && (
+            <>
+              <button className="btn btn-secondary" onClick={() => setShowBulkUpload(true)}><Upload size={14} />Import CSV</button>
+              <button className="btn btn-secondary" onClick={() => exportToCSV(orders.map(o => ({ id: o.id, invoice: `INV-${o.id.toString().padStart(4, '0')}`, customer: o.customerName, date: o.orderDate, status: o.status, total: o.totalAmount })), 'orders')}><Download size={14} />Export CSV</button>
+            </>
+          )}
         </div>
       </div>
 
@@ -77,7 +110,7 @@ export default function Orders({ globalSearch = '', userRole = 'admin' as UserRo
             <tbody>
               {paginated.map(o => (
                 <tr key={o.id}>
-                  <td style={{ fontWeight: 600 }}>#{o.id}</td>
+                  <td style={{ fontWeight: 600 }}>INV-{o.id.toString().padStart(4, '0')}</td>
                   <td>{o.customerName}</td>
                   <td style={{ color: 'var(--text-secondary)' }}>{o.orderDate}</td>
                   <td>{o.items.length} items</td>
@@ -117,7 +150,7 @@ export default function Orders({ globalSearch = '', userRole = 'admin' as UserRo
         <div className="modal-overlay" onClick={() => setSelectedOrder(null)}>
           <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 640 }}>
             <div className="modal-header">
-              <h3>Order #{selectedOrder.id} Details</h3>
+              <h3>Invoice INV-{selectedOrder.id.toString().padStart(4, '0')} Details</h3>
               <button className="btn btn-icon btn-secondary btn-sm" onClick={() => setSelectedOrder(null)}><X size={14} /></button>
             </div>
             <div className="modal-body">
@@ -160,6 +193,15 @@ export default function Orders({ globalSearch = '', userRole = 'admin' as UserRo
             </div>
           </div>
         </div>
+      )}
+
+      {showBulkUpload && (
+        <BulkUpload 
+          type="orders" 
+          onClose={() => setShowBulkUpload(false)} 
+          onSuccess={() => fetchOrders().then(setOrders)}
+          onUpload={handleBulkUpload}
+        />
       )}
     </>
   );

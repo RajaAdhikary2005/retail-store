@@ -51,13 +51,20 @@ export default function InventoryAlerts() {
         supplierName: supplier?.name || '',
         productNames: poProduct.name,
         totalAmount: poProduct.price * poQty,
+        orderedQuantity: poQty,
+        receivedQuantity: 0,
         status: 'Pending',
-        orderDate: new Date().toISOString(),
       });
       setPOMsg(`✓ PO created for ${poQty} units of ${poProduct.name}`);
       setTimeout(() => { setShowPOModal(false); setPOMsg(null); }, 2000);
-    } catch {
-      setPOMsg('Failed to create PO');
+    } catch (err: any) {
+      const msg = err?.message || '';
+      if (msg.toLowerCase().includes('json') || msg.toLowerCase().includes('unexpected token'))
+        setPOMsg('Unable to create PO — server communication error. Please try again.');
+      else if (msg.toLowerCase().includes('failed to fetch') || msg.toLowerCase().includes('network'))
+        setPOMsg('Unable to connect to the server. Please check your connection.');
+      else
+        setPOMsg(msg || 'Failed to create PO. Please try again.');
     }
   };
 

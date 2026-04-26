@@ -22,6 +22,22 @@ function withStoreId(path: string): string {
   return `${path}${sep}storeId=${sid}`;
 }
 
+// Convert raw API errors to user-friendly messages
+function friendlyApiError(method: string, status: number, serverMsg: string): string {
+  // If the server returned a readable message, use it
+  if (serverMsg && !serverMsg.startsWith('{') && !serverMsg.startsWith('<') && serverMsg.length < 200) {
+    return serverMsg;
+  }
+  // Generic friendly messages based on HTTP status
+  if (status === 400) return 'The request was invalid. Please check your input and try again.';
+  if (status === 401) return 'You are not authorized. Please log in again.';
+  if (status === 403) return 'You do not have permission to perform this action.';
+  if (status === 404) return 'The requested resource was not found.';
+  if (status === 409) return 'A conflict occurred. The item may already exist.';
+  if (status >= 500) return 'The server encountered an issue. Please try again in a moment.';
+  return `Request failed. Please try again.`;
+}
+
 async function apiFetch<T>(path: string, fallback: () => T): Promise<T> {
   try {
     const res = await fetch(`${API_BASE}${withStoreId(path)}`);
@@ -41,9 +57,12 @@ async function apiPost<T>(path: string, body: any): Promise<T> {
   });
   if (!res.ok) {
     const errText = await res.text().catch(() => '');
-    throw new Error(`POST ${path} failed (${res.status}): ${errText}`);
+    throw new Error(friendlyApiError('POST', res.status, errText));
   }
-  return await res.json() as T;
+  const text = await res.text();
+  if (!text) return {} as T;
+  try { return JSON.parse(text) as T; }
+  catch { return {} as T; }
 }
 
 async function apiPut<T>(path: string, body: any): Promise<T> {
@@ -52,13 +71,22 @@ async function apiPut<T>(path: string, body: any): Promise<T> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   });
-  if (!res.ok) throw new Error(`PUT ${path} failed (${res.status})`);
-  return await res.json() as T;
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(friendlyApiError('PUT', res.status, errText));
+  }
+  const text = await res.text();
+  if (!text) return {} as T;
+  try { return JSON.parse(text) as T; }
+  catch { return {} as T; }
 }
 
 async function apiDelete(path: string): Promise<void> {
   const res = await fetch(`${API_BASE}${withStoreId(path)}`, { method: 'DELETE' });
-  if (!res.ok) throw new Error(`DELETE ${path} failed (${res.status})`);
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(friendlyApiError('DELETE', res.status, errText));
+  }
 }
 
 async function apiPatch<T>(path: string, body: any): Promise<T> {
@@ -67,8 +95,14 @@ async function apiPatch<T>(path: string, body: any): Promise<T> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   });
-  if (!res.ok) throw new Error(`PATCH ${path} failed`);
-  return await res.json() as T;
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(friendlyApiError('PATCH', res.status, errText));
+  }
+  const text = await res.text();
+  if (!text) return {} as T;
+  try { return JSON.parse(text) as T; }
+  catch { return {} as T; }
 }
 
 // ===================== PRODUCTS =====================
@@ -181,7 +215,8 @@ export async function updateProductStock(productId: number, additionalStock: num
 export interface Due { id: number; type: string; entityId: number; entityName: string; contact: string; totalDue: number; status: string; lastOrderDate: string; pendingOrders: number; }
 
 export async function fetchDues(type?: string): Promise<Due[]> {
-  return apiFetch(`/dues${type ? '?type=' + type : ''}`, () => []);
+  const path = type ? `/dues?type=${type}` : '/dues';
+  return apiFetch(path, () => []);
 }
 
 export async function createDue(due: any): Promise<Due> {

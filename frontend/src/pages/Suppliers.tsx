@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react';
 import { Truck, Plus, Trash2, FileText, Clock, CheckCircle, X, Check, XCircle, Package } from 'lucide-react';
 import { fetchSuppliers, createSupplier, deleteSupplier, type Supplier, fetchProducts, fetchPOs, createPO, updatePOStatus, updateProductStock, type PurchaseOrder } from '../services/api';
 import type { Product } from '../types';
+import { type UserRole } from '../services/auth';
 
-export default function Suppliers() {
+interface Props { userRole?: UserRole; }
+
+export default function Suppliers({ userRole = 'admin' }: Props) {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
@@ -97,14 +100,22 @@ export default function Suppliers() {
         supplierId: poSupplierId, supplierName: supplier?.name || '',
         productNames: selectedProductNames, totalAmount: poTotalAmount,
         orderedQuantity: poQuantity || 0, receivedQuantity: 0,
-        status: 'Pending', orderDate: new Date().toISOString(),
+        status: 'Pending',
       });
       setPoMsg('✓ Purchase Order created!');
       setTimeout(() => {
         setShowPOModal(false); setPoMsg(null); setPoSelectedProducts([]);
         setPoTotalAmount(0); setPoQuantity(0); setPoUnitPrice(0); setPoSupplierId(0); loadData();
       }, 1500);
-    } catch { setPoMsg('✗ Failed to create PO'); }
+    } catch (err: any) {
+      const msg = err?.message || '';
+      if (msg.toLowerCase().includes('json') || msg.toLowerCase().includes('unexpected token'))
+        setPoMsg('Unable to create PO — server communication error. Please try again.');
+      else if (msg.toLowerCase().includes('failed to fetch') || msg.toLowerCase().includes('network'))
+        setPoMsg('Unable to connect to the server. Please check your connection.');
+      else
+        setPoMsg(`✗ ${msg || 'Failed to create PO. Please try again.'}`);
+    }
   };
 
   // Handle marking PO as Cancelled
@@ -167,9 +178,16 @@ export default function Suppliers() {
       <div className="page-header">
         <h2>Suppliers & Purchase Orders</h2>
         <div className="header-actions">
-          <button className="btn btn-primary" onClick={() => tab === 'suppliers' ? setShowModal(true) : setShowPOModal(true)}>
-            <Plus size={18} /> {tab === 'suppliers' ? 'Add Supplier' : 'New PO'}
-          </button>
+          {userRole !== 'manager' && tab === 'suppliers' && (
+            <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+              <Plus size={18} /> Add Supplier
+            </button>
+          )}
+          {tab === 'orders' && (
+            <button className="btn btn-primary" onClick={() => setShowPOModal(true)}>
+              <Plus size={18} /> New PO
+            </button>
+          )}
         </div>
       </div>
 
@@ -205,9 +223,9 @@ export default function Suppliers() {
             <table className="data-table">
               <thead><tr><th>PO #</th><th>Supplier</th><th>Products</th><th>Qty</th><th>Amount</th><th>Received</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody>
-                {orders.map(o => (
+                {filteredOrders.map(o => (
                   <tr key={o.id}>
-                    <td>#{o.id}</td>
+                    <td style={{ fontWeight: 600 }}>PO-{o.id.toString().padStart(4, '0')}</td>
                     <td>{o.supplierName}</td>
                     <td>{o.productNames}</td>
                     <td>{o.orderedQuantity || '—'}</td>

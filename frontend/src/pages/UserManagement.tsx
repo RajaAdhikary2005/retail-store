@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Shield, UserX } from 'lucide-react';
+import { Users, Shield, UserX, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 import { fetchUsers, logAction } from '../services/api';
 import { ROLES, type UserRole, type UserInfo } from '../services/auth';
 
@@ -20,7 +20,9 @@ export default function UserManagement({ user }: UserManagementProps) {
   useEffect(() => {
     // Filter users by the admin's storeId so they only see their own store members
     fetchUsers(currentStoreId).then(data => {
-      setUsers(data.map((u: any) => ({
+      // Filter out pending users — those show in the Requests page only
+      const activeUsers = data.filter((u: any) => u.status !== 'pending');
+      setUsers(activeUsers.map((u: any) => ({
         id: u.id,
         name: u.name || 'Unknown',
         email: u.email,
@@ -46,11 +48,38 @@ export default function UserManagement({ user }: UserManagementProps) {
     } catch {}
   };
 
+  const updateUserRole = async (id: number, newRole: string) => {
+    try {
+      await fetch(`https://retail-store-k6pr.onrender.com/api/auth/users/${id}/role`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: newRole })
+      });
+      setUsers(prev => prev.map(u => u.id === id ? { ...u, role: newRole as UserRole } : u));
+    } catch {
+      flash('Could not update role. Please try again.');
+    }
+  };
+
   const toggleSuspend = (u: ManagedUser) => {
     const next = u.status === 'active' || u.status === 'approved' ? 'suspended' : 'active';
     updateUserStatus(u.id, next);
     logAction({ user: user?.name || 'Admin', action: `User ${next === 'active' ? 'activated' : 'suspended'}`, target: `${u.name} (${u.role})`, severity: next === 'suspended' ? 'warning' : 'info', iconStr: 'Shield' });
     flash(`${u.name} has been ${next === 'active' ? 'activated' : 'suspended'}.`);
+  };
+
+  const handlePromote = (u: ManagedUser) => {
+    const newRole = u.role === 'staff' ? 'manager' : 'admin';
+    updateUserRole(u.id, newRole);
+    logAction({ user: user?.name || 'Admin', action: `Promoted user`, target: `${u.name}: ${u.role} → ${newRole}`, severity: 'info', iconStr: 'Shield' });
+    flash(`${u.name} has been promoted to ${ROLES[newRole as UserRole]?.label || newRole}.`);
+  };
+
+  const handleDemote = (u: ManagedUser) => {
+    const newRole = u.role === 'admin' ? 'manager' : 'staff';
+    updateUserRole(u.id, newRole);
+    logAction({ user: user?.name || 'Admin', action: `Demoted user`, target: `${u.name}: ${u.role} → ${newRole}`, severity: 'warning', iconStr: 'Shield' });
+    flash(`${u.name} has been changed to ${ROLES[newRole as UserRole]?.label || newRole}.`);
   };
 
   const admins = users.filter(u => u.role === 'admin');
@@ -63,6 +92,8 @@ export default function UserManagement({ user }: UserManagementProps) {
     const r = ROLES[u.role] || ROLES.staff;
     // Don't show suspend button for the currently logged-in user (themselves)
     const isSelf = u.email.toLowerCase() === currentUserEmail.toLowerCase();
+    const canPromote = !isSelf && u.role !== 'admin' && (u.status === 'active' || u.status === 'approved');
+    const canDemote = !isSelf && u.role !== 'staff' && u.role !== 'admin' && (u.status === 'active' || u.status === 'approved');
     return (
       <tr key={u.email} style={{ opacity: u.status === 'suspended' ? 0.5 : 1 }}>
         <td><div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -74,8 +105,18 @@ export default function UserManagement({ user }: UserManagementProps) {
         <td><span className="badge" style={{ background: u.status === 'approved' || u.status === 'active' ? 'var(--accent-green-light)' : u.status === 'pending' ? 'var(--accent-orange-light)' : 'var(--accent-red-light)', color: u.status === 'approved' || u.status === 'active' ? 'var(--accent-green)' : u.status === 'pending' ? 'var(--accent-orange)' : 'var(--accent-red)' }}>
           {u.status === 'approved' || u.status === 'active' ? '● Active' : u.status === 'pending' ? '◷ Pending' : '● ' + u.status}</span></td>
         <td>{!isSelf && (
-          <div style={{ display: 'flex', gap: 4 }}>
-            <button className={`btn btn-sm ${u.status === 'active' || u.status === 'approved' ? 'btn-secondary' : 'btn-success'}`} onClick={() => toggleSuspend(u)} style={{ padding: '4px 8px' }}>
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+            {canPromote && (
+              <button className="btn btn-sm btn-primary" onClick={() => handlePromote(u)} style={{ padding: '4px 8px', fontSize: 11 }} title={`Promote to ${u.role === 'staff' ? 'Manager' : 'Admin'}`}>
+                <ArrowUpCircle size={12} /> Promote
+              </button>
+            )}
+            {canDemote && (
+              <button className="btn btn-sm btn-secondary" onClick={() => handleDemote(u)} style={{ padding: '4px 8px', fontSize: 11 }} title={`Demote to ${u.role === 'manager' ? 'Staff' : 'Manager'}`}>
+                <ArrowDownCircle size={12} /> Demote
+              </button>
+            )}
+            <button className={`btn btn-sm ${u.status === 'active' || u.status === 'approved' ? 'btn-secondary' : 'btn-success'}`} onClick={() => toggleSuspend(u)} style={{ padding: '4px 8px', fontSize: 11 }}>
               {u.status === 'active' || u.status === 'approved' ? <><UserX size={12} /> Suspend</> : <>✓ Activate</>}
             </button>
           </div>

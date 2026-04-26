@@ -22,4 +22,6 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
 
     @Query("SELECT p FROM Product p WHERE p.stockQuantity = 0")
     List<Product> findOutOfStockProducts();
+
+    Long countByStoreId(Long storeId);
 }
