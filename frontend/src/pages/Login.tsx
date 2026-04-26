@@ -439,7 +439,7 @@ export default function Login({ onLogin }: LoginProps) {
             style={{ width: '100%', padding: '12px', fontSize: 14 }}
             type="submit"
           >
-            {mode === 'login' ? 'Sign In' : mode === 'signup' ? 'Create Account' : mode === 'otp' ? 'Verify OTP' : mode === 'reset' ? 'Set New Password' : 'Send Otp To Reset Password'}
+            {mode === 'login' ? 'Sign In' : mode === 'signup' ? 'Create Account' : mode === 'otp' ? 'Verify OTP' : mode === 'reset' ? 'Set New Password' : 'Send OTP To Reset Password'}
           </button>
         </form>
 
