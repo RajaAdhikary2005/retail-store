@@ -223,7 +223,7 @@ export default function Suppliers({ userRole = 'admin' }: Props) {
             <table className="data-table">
               <thead><tr><th>PO #</th><th>Supplier</th><th>Products</th><th>Qty</th><th>Amount</th><th>Received</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody>
-                {filteredOrders.map(o => (
+                {orders.map(o => (
                   <tr key={o.id}>
                     <td style={{ fontWeight: 600 }}>PO-{o.id.toString().padStart(4, '0')}</td>
                     <td>{o.supplierName}</td>

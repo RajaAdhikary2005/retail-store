@@ -23,7 +23,7 @@ function withStoreId(path: string): string {
 }
 
 // Convert raw API errors to user-friendly messages
-function friendlyApiError(method: string, status: number, serverMsg: string): string {
+function friendlyApiError(status: number, serverMsg: string): string {
   // If the server returned a readable message, use it
   if (serverMsg && !serverMsg.startsWith('{') && !serverMsg.startsWith('<') && serverMsg.length < 200) {
     return serverMsg;
@@ -57,7 +57,7 @@ async function apiPost<T>(path: string, body: any): Promise<T> {
   });
   if (!res.ok) {
     const errText = await res.text().catch(() => '');
-    throw new Error(friendlyApiError('POST', res.status, errText));
+    throw new Error(friendlyApiError(res.status, errText));
   }
   const text = await res.text();
   if (!text) return {} as T;
@@ -73,7 +73,7 @@ async function apiPut<T>(path: string, body: any): Promise<T> {
   });
   if (!res.ok) {
     const errText = await res.text().catch(() => '');
-    throw new Error(friendlyApiError('PUT', res.status, errText));
+    throw new Error(friendlyApiError(res.status, errText));
   }
   const text = await res.text();
   if (!text) return {} as T;
@@ -85,7 +85,7 @@ async function apiDelete(path: string): Promise<void> {
   const res = await fetch(`${API_BASE}${withStoreId(path)}`, { method: 'DELETE' });
   if (!res.ok) {
     const errText = await res.text().catch(() => '');
-    throw new Error(friendlyApiError('DELETE', res.status, errText));
+    throw new Error(friendlyApiError(res.status, errText));
   }
 }
 
@@ -97,7 +97,7 @@ async function apiPatch<T>(path: string, body: any): Promise<T> {
   });
   if (!res.ok) {
     const errText = await res.text().catch(() => '');
-    throw new Error(friendlyApiError('PATCH', res.status, errText));
+    throw new Error(friendlyApiError(res.status, errText));
   }
   const text = await res.text();
   if (!text) return {} as T;
