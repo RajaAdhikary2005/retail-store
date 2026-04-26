@@ -66,7 +66,7 @@ export const ROLES: Record<UserRole, RolePermissions> = {
     label: 'Manager',
     description: 'Manage inventory, returns, customers. View analytics and dues',
     color: '#f59e0b',
-    allowedPages: ['dashboard', 'products', 'customers', 'orders', 'dues', 'analytics', 'settings', 'customer-lookup', 'inventory-alerts', 'returns', 'take-order'],
+    allowedPages: ['dashboard', 'products', 'customers', 'orders', 'dues', 'analytics', 'settings', 'customer-lookup', 'inventory-alerts', 'returns', 'take-order', 'suppliers'],
     canEdit: { products: true, customers: false, orders: true, dues: false, settings: true },
     canDelete: { products: false, customers: false, orders: false },
     canExport: true,
