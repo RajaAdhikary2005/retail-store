@@ -54,7 +54,7 @@ public class CustomerController {
             if (customerRepository.findByEmail(email).isPresent()) {
                 // Return existing customer instead of error
                 Customer existing = customerRepository.findByEmail(email).get();
-                return ResponseEntity.ok(existing);
+                return ResponseEntity.ok(customerService.toDTO(existing));
             }
 
             Customer customer = new Customer();
@@ -68,7 +68,7 @@ public class CustomerController {
             if (storeId != null) customer.setStoreId(storeId);
 
             Customer saved = customerRepository.save(customer);
-            return new ResponseEntity<>(saved, HttpStatus.CREATED);
+            return new ResponseEntity<>(customerService.toDTO(saved), HttpStatus.CREATED);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to create customer: " + e.getMessage());

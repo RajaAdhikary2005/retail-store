@@ -93,7 +93,7 @@ export default function UserManagement({ user }: UserManagementProps) {
     // Don't show suspend button for the currently logged-in user (themselves)
     const isSelf = u.email.toLowerCase() === currentUserEmail.toLowerCase();
     const canPromote = !isSelf && u.role !== 'admin' && (u.status === 'active' || u.status === 'approved');
-    const canDemote = !isSelf && u.role !== 'staff' && u.role !== 'admin' && (u.status === 'active' || u.status === 'approved');
+    const canDemote = !isSelf && u.role !== 'staff' && (u.status === 'active' || u.status === 'approved');
     return (
       <tr key={u.email} style={{ opacity: u.status === 'suspended' ? 0.5 : 1 }}>
         <td><div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
