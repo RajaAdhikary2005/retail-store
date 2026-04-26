@@ -4,7 +4,7 @@ import {
   USERS, ROLES,
   type UserInfo, type UserRole, type Store as StoreType,
   isEmailPending, fetchStoresFromApi,
-  loginApi, signupApi, resetPasswordApi
+  loginApi, signupApi, resetPasswordApi, verifyOtpApi, setNewPasswordApi
 } from '../services/auth';
 
 interface LoginProps {
@@ -34,7 +34,9 @@ export default function Login({ onLogin }: LoginProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
-  const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login');
+  const [mode, setMode] = useState<'login' | 'signup' | 'forgot' | 'otp' | 'reset'>('login');
+  const [otp, setOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
 
   // Signup fields
   const [signupName, setSignupName] = useState('');
@@ -60,6 +62,8 @@ export default function Login({ onLogin }: LoginProps) {
   const resetForm = (clearMessages = true) => {
     setEmail('');
     setPassword('');
+    setOtp('');
+    setNewPassword('');
     setSignupName('');
     setSignupRole('staff');
     setStoreName('');
@@ -145,19 +149,36 @@ export default function Login({ onLogin }: LoginProps) {
     }
 
     if (mode === 'forgot') {
-      // --- Forgot Password Flow ---
-      if (!email.trim()) {
-        setError('Please enter your email address');
-        return;
-      }
+      if (!email.trim()) { setError('Please enter your email address'); return; }
       resetPasswordApi(email.toLowerCase())
         .then(() => {
-          setSuccessMsg('If an account with this email exists, a password reset link has been sent.');
-          setEmail('');
+          setSuccessMsg('An OTP has been sent to your email.');
+          setMode('otp');
         })
-        .catch(err => {
-          setError(friendlyError(err.message));
-        });
+        .catch(err => { setError(friendlyError(err.message)); });
+      return;
+    }
+
+    if (mode === 'otp') {
+      if (!otp.trim()) { setError('Please enter the OTP'); return; }
+      verifyOtpApi(email.toLowerCase(), otp.trim())
+        .then(() => {
+          setSuccessMsg('OTP verified. Please enter your new password.');
+          setMode('reset');
+        })
+        .catch(err => { setError(friendlyError(err.message)); });
+      return;
+    }
+
+    if (mode === 'reset') {
+      if (newPassword.length < 6) { setError('Password must be at least 6 characters'); return; }
+      setNewPasswordApi(email.toLowerCase(), otp.trim(), newPassword)
+        .then(() => {
+          setSuccessMsg('Password successfully reset. You can now login.');
+          setMode('login');
+          setPassword('');
+        })
+        .catch(err => { setError(friendlyError(err.message)); });
       return;
     }
 
@@ -184,6 +205,10 @@ export default function Login({ onLogin }: LoginProps) {
               ? 'Sign in to your retail admin panel'
               : mode === 'signup'
               ? 'Set up your retail admin account'
+              : mode === 'otp'
+              ? 'Enter the OTP sent to your email'
+              : mode === 'reset'
+              ? 'Set your new password'
               : 'Enter your email to reset password'}
           </p>
         </div>
@@ -216,20 +241,54 @@ export default function Login({ onLogin }: LoginProps) {
           )}
 
           {/* Email */}
-          <div className="form-group">
-            <label className="form-label">Email Address</label>
-            <input
-              className="form-input"
-              type="email"
-              placeholder="you@example.com"
-              required
-              value={email}
-              onChange={e => { setEmail(e.target.value); setError(''); setSuccessMsg(''); }}
-            />
-          </div>
+          {(mode === 'login' || mode === 'signup' || mode === 'forgot') && (
+            <div className="form-group">
+              <label className="form-label">Email Address</label>
+              <input
+                className="form-input"
+                type="email"
+                placeholder="you@example.com"
+                required
+                value={email}
+                onChange={e => { setEmail(e.target.value); setError(''); setSuccessMsg(''); }}
+              />
+            </div>
+          )}
+
+          {/* OTP */}
+          {mode === 'otp' && (
+            <div className="form-group">
+              <label className="form-label">One-Time Password (OTP)</label>
+              <input
+                className="form-input"
+                type="text"
+                placeholder="123456"
+                required
+                maxLength={6}
+                value={otp}
+                onChange={e => { setOtp(e.target.value); setError(''); setSuccessMsg(''); }}
+              />
+            </div>
+          )}
+
+          {/* New Password */}
+          {mode === 'reset' && (
+            <div className="form-group">
+              <label className="form-label">New Password</label>
+              <input
+                className="form-input"
+                type="password"
+                placeholder="••••••••"
+                required
+                minLength={6}
+                value={newPassword}
+                onChange={e => { setNewPassword(e.target.value); setError(''); setSuccessMsg(''); }}
+              />
+            </div>
+          )}
 
           {/* Password */}
-          {mode !== 'forgot' && (
+          {(mode === 'login' || mode === 'signup') && (
             <div className="form-group">
               <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
                 Password
@@ -376,11 +435,11 @@ export default function Login({ onLogin }: LoginProps) {
           )}
 
           <button
-            type="submit"
             className="btn btn-primary"
-            style={{ width: '100%', justifyContent: 'center', padding: '12px', marginTop: 8 }}
+            style={{ width: '100%', padding: '12px', fontSize: 14 }}
+            type="submit"
           >
-            {mode === 'login' ? 'Sign In' : mode === 'signup' ? (signupRole === 'admin' ? 'Create Account & Store' : 'Submit Request') : 'Send Reset Link'}
+            {mode === 'login' ? 'Sign In' : mode === 'signup' ? 'Create Account' : mode === 'otp' ? 'Verify OTP' : mode === 'reset' ? 'Set New Password' : 'Send Reset Link'}
           </button>
         </form>
 
@@ -401,8 +460,8 @@ export default function Login({ onLogin }: LoginProps) {
               </a>
             </>
           )}
-          {mode === 'forgot' && (
-            <a href="#" onClick={e => { e.preventDefault(); setMode('login'); }}>
+          {(mode === 'forgot' || mode === 'otp' || mode === 'reset') && (
+            <a href="#" onClick={e => { e.preventDefault(); resetForm(); setMode('login'); }}>
               ← Back to Sign In
             </a>
           )}

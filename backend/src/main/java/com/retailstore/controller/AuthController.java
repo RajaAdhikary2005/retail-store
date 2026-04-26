@@ -127,29 +127,94 @@ public class AuthController {
 
         Optional<User> userOpt = userRepository.findByEmail(email.trim().toLowerCase());
         if (!userOpt.isPresent()) {
-            return ResponseEntity.ok(Map.of("message", "If the email exists, a reset link has been sent."));
+            return ResponseEntity.ok(Map.of("message", "If the email exists, an OTP has been sent."));
         }
 
         User user = userOpt.get();
-        // Generate a new 8-character temporary password
-        String tempPassword = java.util.UUID.randomUUID().toString().substring(0, 8);
-        user.setPassword(passwordEncoder.encode(tempPassword));
+        // Generate a 6-digit OTP
+        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
+        user.setResetOtp(otp);
+        user.setResetOtpExpiry(java.time.LocalDateTime.now().plusMinutes(10));
         userRepository.save(user);
+
+        // Fetch Store and Admin details
+        String storeName = "Retail Store";
+        String adminName = "System Admin";
+        if (user.getStoreId() != null) {
+            Optional<Store> storeOpt = storeRepository.findById(user.getStoreId());
+            if (storeOpt.isPresent()) {
+                Store store = storeOpt.get();
+                storeName = store.getName();
+                Optional<User> adminOpt = userRepository.findByEmail(store.getAdminEmail());
+                if (adminOpt.isPresent()) adminName = adminOpt.get().getName();
+            }
+        }
 
         // Send email
         try {
             org.springframework.mail.SimpleMailMessage message = new org.springframework.mail.SimpleMailMessage();
             message.setFrom("rajaadhikary002@gmail.com");
             message.setTo(user.getEmail());
-            message.setSubject("Retail Store - Password Reset");
-            message.setText("Hello " + user.getName() + ",\n\nYour password has been reset. Your temporary password is: " + tempPassword + "\n\nPlease login using this temporary password and you can change it later in settings.");
+            message.setSubject(storeName + " - Password Reset OTP");
+            
+            String mailText = "Hello " + user.getName() + ",\n\n"
+                    + "We received a request to reset your password for your account at " + storeName + ".\n\n"
+                    + "Your One-Time Password (OTP) to reset your password is: " + otp + "\n"
+                    + "(This code is valid for 10 minutes)\n\n"
+                    + "If you did not request this password reset, please ignore this email. Your account is still secure. However, if you suspect someone is trying to access your account, please log in and change your password immediately.\n\n"
+                    + "Thank you for choosing " + storeName + "!\n\n"
+                    + "Best Regards,\n"
+                    + adminName + " (Store Admin)\n"
+                    + "System Developed by: Raja Adhikary";
+
+            message.setText(mailText);
             mailSender.send(message);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body("Failed to send email. Check SMTP settings.");
         }
 
-        return ResponseEntity.ok(Map.of("message", "If the email exists, a password reset email has been sent."));
+        return ResponseEntity.ok(Map.of("message", "If the email exists, an OTP has been sent."));
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOtp(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        String otp = body.get("otp");
+        if (email == null || otp == null) return ResponseEntity.badRequest().body("Email and OTP required");
+
+        Optional<User> userOpt = userRepository.findByEmail(email.trim().toLowerCase());
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            if (otp.equals(user.getResetOtp()) && user.getResetOtpExpiry() != null && user.getResetOtpExpiry().isAfter(java.time.LocalDateTime.now())) {
+                return ResponseEntity.ok(Map.of("message", "OTP verified"));
+            }
+        }
+        return ResponseEntity.status(400).body("Invalid or expired OTP");
+    }
+
+    @PostMapping("/set-new-password")
+    public ResponseEntity<?> setNewPassword(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        String otp = body.get("otp");
+        String newPassword = body.get("newPassword");
+        
+        if (email == null || otp == null || newPassword == null || newPassword.length() < 6) {
+            return ResponseEntity.badRequest().body("Invalid request or password too short");
+        }
+
+        Optional<User> userOpt = userRepository.findByEmail(email.trim().toLowerCase());
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            if (otp.equals(user.getResetOtp()) && user.getResetOtpExpiry() != null && user.getResetOtpExpiry().isAfter(java.time.LocalDateTime.now())) {
+                user.setPassword(passwordEncoder.encode(newPassword));
+                user.setResetOtp(null);
+                user.setResetOtpExpiry(null);
+                userRepository.save(user);
+                return ResponseEntity.ok(Map.of("message", "Password reset successfully"));
+            }
+        }
+        return ResponseEntity.status(400).body("Invalid or expired OTP");
     }
 
     @GetMapping("/users")

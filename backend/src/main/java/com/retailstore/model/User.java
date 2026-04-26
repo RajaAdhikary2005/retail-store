@@ -24,6 +24,9 @@ public class User {
     private String status; // approved, pending, rejected
     private LocalDateTime createdAt;
 
+    private String resetOtp;
+    private LocalDateTime resetOtpExpiry;
+
     public User() {}
 
     public Long getId() { return id; }
@@ -43,6 +46,11 @@ public class User {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+
+    public String getResetOtp() { return resetOtp; }
+    public void setResetOtp(String resetOtp) { this.resetOtp = resetOtp; }
+    public LocalDateTime getResetOtpExpiry() { return resetOtpExpiry; }
+    public void setResetOtpExpiry(LocalDateTime resetOtpExpiry) { this.resetOtpExpiry = resetOtpExpiry; }
 
     @PrePersist
     protected void onCreate() {

@@ -152,6 +152,32 @@ export async function resetPasswordApi(email: string): Promise<any> {
   return await res.json();
 }
 
+export async function verifyOtpApi(email: string, otp: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/auth/verify-otp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, otp }),
+  });
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(error || 'Invalid OTP');
+  }
+  return await res.json();
+}
+
+export async function setNewPasswordApi(email: string, otp: string, newPassword: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/auth/set-new-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, otp, newPassword }),
+  });
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(error || 'Failed to reset password');
+  }
+  return await res.json();
+}
+
 // ---- Store Helpers (fetches from backend API) ----
 
 export async function fetchStoresFromApi(): Promise<Store[]> {
