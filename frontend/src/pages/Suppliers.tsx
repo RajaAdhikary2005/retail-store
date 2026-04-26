@@ -250,7 +250,7 @@ export default function Suppliers({ userRole = 'admin' }: Props) {
                       {o.status === 'Pending' || o.status === 'Partially Received' ? (
                         <div style={{ display: 'flex', gap: 4 }}>
                           <button className="btn btn-sm btn-success" style={{ fontSize: 11, gap: 4 }} onClick={() => openReceiveModal(o)}>
-                            <CheckCircle size={12} /> Approve & Receive
+                            <CheckCircle size={12} /> Receive
                           </button>
                           {o.status === 'Pending' && (
                             <button className="btn btn-sm btn-danger" style={{ fontSize: 11, gap: 4 }} onClick={() => handleCancelPO(o)}>
