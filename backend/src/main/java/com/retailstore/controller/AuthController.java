@@ -25,6 +25,9 @@ public class AuthController {
     private StoreRepository storeRepository;
 
     @Autowired
+    private org.springframework.mail.javamail.JavaMailSender mailSender;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @PostMapping("/signup")
@@ -113,6 +116,40 @@ public class AuthController {
             }
         }
         return ResponseEntity.status(401).body("Invalid email or password");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        if (email == null || email.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Email required");
+        }
+
+        Optional<User> userOpt = userRepository.findByEmail(email.trim().toLowerCase());
+        if (!userOpt.isPresent()) {
+            return ResponseEntity.ok(Map.of("message", "If the email exists, a reset link has been sent."));
+        }
+
+        User user = userOpt.get();
+        // Generate a new 8-character temporary password
+        String tempPassword = java.util.UUID.randomUUID().toString().substring(0, 8);
+        user.setPassword(passwordEncoder.encode(tempPassword));
+        userRepository.save(user);
+
+        // Send email
+        try {
+            org.springframework.mail.SimpleMailMessage message = new org.springframework.mail.SimpleMailMessage();
+            message.setFrom("rajaadhikary002@gmail.com");
+            message.setTo(user.getEmail());
+            message.setSubject("Retail Store - Password Reset");
+            message.setText("Hello " + user.getName() + ",\n\nYour password has been reset. Your temporary password is: " + tempPassword + "\n\nPlease login using this temporary password and you can change it later in settings.");
+            mailSender.send(message);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Failed to send email. Check SMTP settings.");
+        }
+
+        return ResponseEntity.ok(Map.of("message", "If the email exists, a password reset email has been sent."));
     }
 
     @GetMapping("/users")

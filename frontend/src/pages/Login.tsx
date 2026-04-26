@@ -4,7 +4,7 @@ import {
   USERS, ROLES,
   type UserInfo, type UserRole, type Store as StoreType,
   isEmailPending, fetchStoresFromApi,
-  loginApi, signupApi,
+  loginApi, signupApi, resetPasswordApi
 } from '../services/auth';
 
 interface LoginProps {
@@ -150,8 +150,14 @@ export default function Login({ onLogin }: LoginProps) {
         setError('Please enter your email address');
         return;
       }
-      setSuccessMsg('If an account with this email exists, a password reset link has been sent.');
-      setEmail('');
+      resetPasswordApi(email.toLowerCase())
+        .then(() => {
+          setSuccessMsg('If an account with this email exists, a password reset link has been sent.');
+          setEmail('');
+        })
+        .catch(err => {
+          setError(friendlyError(err.message));
+        });
       return;
     }
 

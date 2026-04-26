@@ -137,6 +137,21 @@ export async function signupApi(data: any): Promise<any> {
   return await res.json();
 }
 
+export async function resetPasswordApi(email: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/auth/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+  
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(error || 'Failed to reset password');
+  }
+  
+  return await res.json();
+}
+
 // ---- Store Helpers (fetches from backend API) ----
 
 export async function fetchStoresFromApi(): Promise<Store[]> {
