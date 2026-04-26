@@ -24,6 +24,11 @@ export default function Dashboard() {
         const db = b.orderDate ? new Date(b.orderDate).getTime() : 0;
         return db - da;
       });
+      if (a.monthlyRevenue && a.monthlyRevenue.length > 0) {
+        const currentMonth = a.monthlyRevenue[a.monthlyRevenue.length - 1];
+        s.monthlyRevenue = currentMonth.revenue || 0;
+        s.revenueGrowth = currentMonth.growth || 0;
+      }
       setRecentOrders(sorted.slice(0, 5)); setSalesTrends(a.salesTrends);
       setTopProducts(a.topProducts); setCatDist(a.categoryDistribution); setLoading(false);
     });

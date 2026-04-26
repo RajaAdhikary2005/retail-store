@@ -99,6 +99,15 @@ public class ProductService {
             Category category = categoryRepository.findById(dto.getCategoryId())
                     .orElseThrow(() -> new RuntimeException("Category not found"));
             product.setCategory(category);
+        } else if (dto.getCategoryName() != null) {
+            Category category = categoryRepository.findByName(dto.getCategoryName())
+                    .orElseGet(() -> {
+                        Category newCat = new Category();
+                        newCat.setName(dto.getCategoryName());
+                        if (product.getStoreId() != null) newCat.setStoreId(product.getStoreId());
+                        return categoryRepository.save(newCat);
+                    });
+            product.setCategory(category);
         }
         if (dto.getPrice() != null) product.setPrice(dto.getPrice());
         if (dto.getStockQuantity() != null) product.setStockQuantity(dto.getStockQuantity());

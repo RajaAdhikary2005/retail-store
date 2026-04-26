@@ -289,11 +289,6 @@ export default function TakeOrder({ userName }: Props) {
                     </div>
                   )}
                 </div>
-                <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)', position: 'relative', zIndex: 1 }}>Or enter name manually:</div>
-                <input className="form-input" type="text" placeholder="Customer name *" value={customerName} onChange={e => setCustomerName(e.target.value)} style={{ marginTop: 4, fontSize: 13, position: 'relative', zIndex: 1 }} />
-                <button className="btn btn-sm btn-secondary" style={{ marginTop: 8, fontSize: 11, gap: 4, position: 'relative', zIndex: 1 }} onClick={() => setShowNewCustomer(true)}>
-                  <UserPlus size={12} /> Add New Customer
-                </button>
               </>
             )}
           </div>

@@ -133,9 +133,11 @@ export default function UserManagement({ user }: UserManagementProps) {
             <button className={`btn btn-sm ${u.status === 'active' || u.status === 'approved' ? 'btn-secondary' : 'btn-success'}`} onClick={() => toggleSuspend(u)} style={{ padding: '4px 8px', fontSize: 11 }}>
               {u.status === 'active' || u.status === 'approved' ? <><UserX size={12} /> Suspend</> : <>✓ Activate</>}
             </button>
-            <button className="btn btn-sm btn-danger" onClick={() => deleteUser(u)} style={{ padding: '4px 8px', fontSize: 11 }} title="Delete user">
-              <Trash2 size={12} /> Delete
-            </button>
+            {u.role !== 'admin' && (
+              <button className="btn btn-sm btn-danger" onClick={() => deleteUser(u)} style={{ padding: '4px 8px', fontSize: 11 }} title="Delete user">
+                <Trash2 size={12} /> Delete
+              </button>
+            )}
           </div>
         )}</td>
       </tr>
