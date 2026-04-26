@@ -165,7 +165,7 @@ public class AuthController {
                     + "Thank you for choosing " + storeName + "!\n\n"
                     + "Best Regards,\n"
                     + adminName + " (Store Admin)\n"
-                    + "System Developed by: Raja Adhikary";
+                    + "Retail Store Management System Developed by: Raja Adhikary";
 
             message.setText(mailText);
             mailSender.send(message);
