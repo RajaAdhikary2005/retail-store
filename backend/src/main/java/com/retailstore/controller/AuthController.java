@@ -152,22 +152,33 @@ public class AuthController {
 
         // Send email
         try {
-            org.springframework.mail.SimpleMailMessage message = new org.springframework.mail.SimpleMailMessage();
-            message.setFrom("rajaadhikary002@gmail.com");
-            message.setTo(user.getEmail());
-            message.setSubject(storeName + " - Password Reset OTP");
-            
-            String mailText = "Hello " + user.getName() + ",\n\n"
-                    + "We received a request to reset your password for your account at " + storeName + ".\n\n"
-                    + "Your One-Time Password (OTP) to reset your password is: " + otp + "\n"
-                    + "(This code is valid for 10 minutes)\n\n"
-                    + "If you did not request this password reset, please ignore this email. Your account is still secure. However, if you suspect someone is trying to access your account, please log in and change your password immediately.\n\n"
-                    + "Thank you for choosing " + storeName + "!\n\n"
-                    + "Best Regards,\n"
-                    + adminName + " (Store Admin)\n"
-                    + "Retail Store Management System Developed by: Raja Adhikary";
+            jakarta.mail.internet.MimeMessage message = mailSender.createMimeMessage();
+            org.springframework.mail.javamail.MimeMessageHelper helper = new org.springframework.mail.javamail.MimeMessageHelper(message, true, "UTF-8");
 
-            message.setText(mailText);
+            helper.setFrom("rajaadhikary002@gmail.com");
+            helper.setTo(user.getEmail());
+            helper.setSubject(storeName + " - Password Reset OTP");
+            
+            String htmlContent = "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333; border: 1px solid #eaeaea; border-radius: 10px;'>"
+                    + "<div style='text-align: center; margin-bottom: 20px;'>"
+                    + "<img src='https://retail-store-gilt.vercel.app/retailstore-logo.png' alt='Retail Store Logo' style='max-width: 180px;'/>"
+                    + "</div>"
+                    + "<h2 style='color: #1f2937;'>Hello " + user.getName() + ",</h2>"
+                    + "<p style='font-size: 15px; line-height: 1.5;'>We received a request to reset your password for your account at <b>" + storeName + "</b>.</p>"
+                    + "<p style='font-size: 15px;'>Your One-Time Password (OTP) to reset your password is:</p>"
+                    + "<div style='font-size: 28px; font-weight: bold; letter-spacing: 4px; color: #2563eb; background: #eff6ff; padding: 15px; text-align: center; border-radius: 8px; margin: 25px 0;'>" + otp + "</div>"
+                    + "<p style='font-size: 13px; color: #6b7280; text-align: center; margin-top: -15px;'><i>(This code is valid for 10 minutes)</i></p>"
+                    + "<p style='font-size: 14px; line-height: 1.5; color: #4b5563; background: #fffbeb; padding: 12px; border-left: 4px solid #f59e0b; margin: 25px 0;'>"
+                    + "If you did not request this password reset, please ignore this email. Your account is still secure. However, if you suspect someone is trying to access your account, please log in and change your password immediately.</p>"
+                    + "<hr style='border: none; border-top: 1px solid #eaeaea; margin: 25px 0;'/>"
+                    + "<p style='font-size: 15px;'>Thank you for choosing <b>" + storeName + "</b>!</p>"
+                    + "<p style='font-size: 15px; line-height: 1.5;'>Best Regards,<br/><b>" + adminName + "</b> (Store Admin)</p>"
+                    + "<div style='text-align: center; margin-top: 30px; font-size: 12px; color: #9ca3af;'>"
+                    + "Retail Store Management System Developed by: <b>Raja Adhikary</b>"
+                    + "</div>"
+                    + "</div>";
+
+            helper.setText(htmlContent, true);
             mailSender.send(message);
         } catch (Exception e) {
             e.printStackTrace();
