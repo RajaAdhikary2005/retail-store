@@ -1,4 +1,4 @@
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 
 interface LogoProps {
   size?: number;
@@ -18,10 +18,10 @@ export default function Logo({ size = 32 }: LogoProps) {
       boxShadow: 'inset 0 2px 4px rgba(255, 255, 255, 0.6), inset 0 -2px 4px rgba(0, 0, 0, 0.4), 0 4px 10px rgba(15, 23, 42, 0.5)',
       flexShrink: 0
     }}>
-      <ShoppingBag 
+      <ShoppingCart 
         color="#ffffff" 
-        size={size * 0.5} 
-        strokeWidth={3} 
+        size={size * 0.52} 
+        strokeWidth={2.5} 
         style={{ filter: 'drop-shadow(0px 2px 2px rgba(0,0,0,0.4))' }} 
       />
     </div>
