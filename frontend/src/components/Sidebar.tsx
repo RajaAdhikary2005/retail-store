@@ -59,7 +59,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, userRole, use
       <div className="sidebar-brand">
         <Logo size={38} />
         <div>
-          <h2 style={{ fontFamily: "'Outfit', 'Montserrat', 'Trebuchet MS', sans-serif" }}>RetailStore</h2>
+          <h2 style={{ fontFamily: "'Outfit', 'Montserrat', 'Trebuchet MS', sans-serif", background: 'linear-gradient(135deg, #64748b, #0f172a)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>RetailStore</h2>
           <span>Management System</span>
         </div>
       </div>
