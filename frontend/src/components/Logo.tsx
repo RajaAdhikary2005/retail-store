@@ -1,4 +1,4 @@
-import { Layers } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 
 interface LogoProps {
   size?: number;
@@ -9,15 +9,15 @@ export default function Logo({ size = 32 }: LogoProps) {
     <div style={{
       width: size,
       height: size,
-      borderRadius: Math.max(8, size * 0.25), // Sleek Squircle
-      background: 'linear-gradient(135deg, #4c1d95 0%, #8b5cf6 100%)', // Midnight Violet to Vibrant Purple
+      borderRadius: '50%', // Circular
+      background: 'linear-gradient(135deg, #059669 0%, #14b8a6 100%)', // Emerald Green to Bright Teal
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      boxShadow: '0 4px 10px rgba(139, 92, 246, 0.3)', // Purple shadow
+      boxShadow: '0 4px 10px rgba(16, 185, 129, 0.3)', // Emerald shadow
       flexShrink: 0
     }}>
-      <Layers color="#ffffff" size={size * 0.55} strokeWidth={2.5} />
+      <ShoppingCart color="#ffffff" size={size * 0.55} strokeWidth={2.5} />
     </div>
   );
 }
