@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { CheckCircle, XCircle, Clock, Plus, X, DollarSign, ShieldCheck } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Plus, X, IndianRupee, ShieldCheck } from 'lucide-react';
 import { fetchOrders, fetchReturns, createReturn, updateReturnStatus, logAction, type ReturnRequest } from '../services/api';
 import type { Order } from '../types';
 import { type UserRole } from '../services/auth';
@@ -69,7 +69,7 @@ export default function Returns({ userRole, userName = 'User' }: Props) {
   const statusBadge = (status: string) => {
     const s = status.toLowerCase();
     const colors: Record<string, string> = { pending: 'var(--accent-orange)', approved: 'var(--accent-blue)', rejected: 'var(--accent-red)', refunded: 'var(--accent-green)' };
-    const icons: Record<string, React.ReactNode> = { pending: <Clock size={12} />, approved: <CheckCircle size={12} />, rejected: <XCircle size={12} />, refunded: <DollarSign size={12} /> };
+    const icons: Record<string, React.ReactNode> = { pending: <Clock size={12} />, approved: <CheckCircle size={12} />, rejected: <XCircle size={12} />, refunded: <IndianRupee size={12} /> };
     return (
       <span className="badge" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: `${colors[s] || 'var(--accent-blue)'}15`, color: colors[s] || 'var(--accent-blue)' }}>
         {icons[s] || <Clock size={12} />} {status}
@@ -105,7 +105,7 @@ export default function Returns({ userRole, userName = 'User' }: Props) {
         </div>
         <div className="stat-card">
           <div className="stat-info"><h4>Refunded</h4><div className="stat-value" style={{ color: 'var(--accent-green)' }}>{refundedCount}</div></div>
-          <div className="stat-icon green"><DollarSign size={22} /></div>
+          <div className="stat-icon green"><IndianRupee size={22} /></div>
         </div>
         <div className="stat-card">
           <div className="stat-info"><h4>Total Refunded</h4><div className="stat-value">₹{totalRefunded.toLocaleString()}</div></div>
@@ -168,7 +168,7 @@ export default function Returns({ userRole, userName = 'User' }: Props) {
                       {/* Only Admin can issue refund after approval */}
                       {r.status === 'Approved' && canRefund && (
                         <button className="btn btn-sm btn-primary" onClick={() => handleStatusChange(r.id, 'Refunded')} title="Issue Refund">
-                          <DollarSign size={12} /> Issue Refund
+                          <IndianRupee size={12} /> Issue Refund
                         </button>
                       )}
                       {/* Staff sees status only */}

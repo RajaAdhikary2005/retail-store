@@ -440,7 +440,7 @@ export default function Login({ onLogin }: LoginProps) {
 
           <button
             className="btn btn-primary"
-            style={{ width: '100%', padding: '12px', fontSize: 14 }}
+            style={{ width: '100%', padding: '12px', fontSize: 14, justifyContent: 'center' }}
             type="submit"
           >
             {mode === 'login' ? 'Sign In' : mode === 'signup' ? 'Create Account' : mode === 'otp' ? 'Verify OTP' : mode === 'reset' ? 'Set New Password' : 'Send OTP To Reset Password'}
