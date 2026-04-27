@@ -18,12 +18,22 @@ export default function Logo({ size = 32 }: LogoProps) {
       boxShadow: 'inset 0 2px 4px rgba(255, 255, 255, 0.6), inset 0 -2px 4px rgba(0, 0, 0, 0.4), 0 4px 10px rgba(15, 23, 42, 0.5)',
       flexShrink: 0
     }}>
-      <ShoppingCart 
-        color="#ffffff" 
-        size={size * 0.52} 
-        strokeWidth={2.5} 
-        style={{ filter: 'drop-shadow(0px 2px 2px rgba(0,0,0,0.4))' }} 
-      />
+      <svg 
+        width={size * 0.5} 
+        height={size * 0.5} 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="#ffffff" 
+        strokeWidth="2.5" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+        style={{ filter: 'drop-shadow(0px 2px 2px rgba(0,0,0,0.4))' }}
+      >
+        <path d="M6 6h15l-1.5 9h-11L6 6z" />
+        <path d="M2 2h4l2 11" />
+        <circle cx="9" cy="20" r="1.5" fill="#ffffff" stroke="none" />
+        <circle cx="18" cy="20" r="1.5" fill="#ffffff" stroke="none" />
+      </svg>
     </div>
   );
 }
