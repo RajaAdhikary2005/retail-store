@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import './index.css';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
+import Logo from './components/Logo';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
@@ -108,8 +109,8 @@ function App() {
         {/* Footer */}
         <footer className="app-footer">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-            <img src="/retailstore-logo.png" alt="RetailStore Logo" style={{ height: 32, borderRadius: 6 }} />
-            <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: '-0.3px', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>RetailStore</span>
+            <Logo size={32} />
+            <span style={{ fontFamily: "'Outfit', 'Montserrat', 'Trebuchet MS', sans-serif", fontWeight: 700, fontSize: 15, letterSpacing: '-0.3px', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>RetailStore</span>
           </div>
           <div className="footer-brand">
             Made with <Heart size={12} style={{ color: '#ef4444', fill: '#ef4444', display: 'inline', verticalAlign: 'middle', margin: '0 3px' }} /> by Raja Adhikary

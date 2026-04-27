@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Eye, EyeOff, Store, CheckCircle } from 'lucide-react';
+import Logo from '../components/Logo';
 import {
   USERS, ROLES,
   type UserInfo, type UserRole, type Store as StoreType,
@@ -195,9 +196,12 @@ export default function Login({ onLogin }: LoginProps) {
   return (
     <div className="auth-page">
       <div className="auth-card" style={{ maxWidth: 460 }}>
-        <div className="auth-brand">
-          <div className="brand-icon">RS</div>
-          <h1>
+        <div className="auth-brand" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            <Logo size={48} />
+            <span style={{ fontFamily: "'Outfit', 'Montserrat', 'Trebuchet MS', sans-serif", fontWeight: 800, fontSize: 24, letterSpacing: '-0.5px', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1 }}>RetailStore</span>
+          </div>
+          <h1 style={{ marginTop: 0 }}>
             {mode === 'login' ? 'Welcome Back' : mode === 'signup' ? 'Create Account' : 'Reset Password'}
           </h1>
           <p>

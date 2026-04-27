@@ -1,4 +1,5 @@
 import { LayoutDashboard, Package, Users, ShoppingCart, BarChart3, Settings, LogOut, IndianRupee, UserCheck, Search, AlertTriangle, RotateCcw, Shield, FileText, Truck, Tag } from 'lucide-react';
+import Logo from './Logo';
 import { type UserRole, ROLES, canAccessPage, getPendingCountForAdmin } from '../services/auth';
 import { type UserInfo } from '../services/auth';
 
@@ -56,9 +57,9 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, userRole, use
   return (
     <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
       <div className="sidebar-brand">
-        <img src="/retailstore-logo.png" alt="RetailStore" style={{ width: 38, height: 38, borderRadius: 'var(--radius-sm)', objectFit: 'cover' }} />
+        <Logo size={38} />
         <div>
-          <h2>RetailStore</h2>
+          <h2 style={{ fontFamily: "'Outfit', 'Montserrat', 'Trebuchet MS', sans-serif" }}>RetailStore</h2>
           <span>Management System</span>
         </div>
       </div>

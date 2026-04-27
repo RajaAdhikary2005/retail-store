@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Line, Bar } from 'react-chartjs-2';
-import { fetchAnalytics, fetchOrders } from '../services/api';
-import type { AnalyticsData, Order } from '../types';
-import { TrendingUp, TrendingDown, AlertTriangle, Award, Crown, Calendar } from 'lucide-react';
+import { fetchAnalytics, fetchOrders, fetchSuppliers, fetchProducts, createPO, type Supplier } from '../services/api';
+import type { AnalyticsData, Order, Product } from '../types';
+import { TrendingUp, TrendingDown, AlertTriangle, Award, Crown, Calendar, Plus, X } from 'lucide-react';
 
 type TrendPeriod = 'day' | 'month' | 'year';
 
@@ -32,14 +32,60 @@ export default function Analytics() {
   const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [trendPeriod, setTrendPeriod] = useState<TrendPeriod>('day');
+  
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [showPOModal, setShowPOModal] = useState(false);
+  const [poProduct, setPOProduct] = useState<Product | null>(null);
+  const [poSupplierId, setPOSupplierId] = useState(0);
+  const [poQty, setPOQty] = useState(50);
+  const [poMsg, setPOMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([fetchAnalytics(), fetchOrders()]).then(([d, o]) => {
+    Promise.all([fetchAnalytics(), fetchOrders(), fetchSuppliers(), fetchProducts()]).then(([d, o, s, p]) => {
       setData(d);
       setAllOrders(o);
+      setSuppliers(s);
+      setProducts(p);
       setLoading(false);
     });
   }, []);
+
+  const openPOModal = (productId: number) => {
+    const p = products.find(prod => prod.id === productId);
+    if (!p) return;
+    setPOProduct(p);
+    setPOQty(50);
+    setPOSupplierId(suppliers.length > 0 ? suppliers[0].id : 0);
+    setPOMsg(null);
+    setShowPOModal(true);
+  };
+
+  const handleCreatePO = async () => {
+    if (!poProduct || !poSupplierId || poQty <= 0) return;
+    const supplier = suppliers.find(s => s.id === poSupplierId);
+    try {
+      await createPO({
+        supplierId: poSupplierId,
+        supplierName: supplier?.name || '',
+        productNames: poProduct.name,
+        totalAmount: poProduct.price * poQty,
+        orderedQuantity: poQty,
+        receivedQuantity: 0,
+        status: 'Pending',
+      });
+      setPOMsg(`✓ PO created for ${poQty} units of ${poProduct.name}`);
+      setTimeout(() => { setShowPOModal(false); setPOMsg(null); }, 2000);
+    } catch (err: any) {
+      const msg = err?.message || '';
+      if (msg.toLowerCase().includes('json') || msg.toLowerCase().includes('unexpected token'))
+        setPOMsg('Unable to create PO — server communication error. Please try again.');
+      else if (msg.toLowerCase().includes('failed to fetch') || msg.toLowerCase().includes('network'))
+        setPOMsg('Unable to connect to the server. Please check your connection.');
+      else
+        setPOMsg(msg || 'Failed to create PO. Please try again.');
+    }
+  };
 
   if (loading || !data) return <div className="loading-spinner"><div className="spinner" /></div>;
 
@@ -193,7 +239,7 @@ export default function Analytics() {
 
       {/* Inventory Alerts */}
       <div className="card">
-        <div className="card-header"><h3><AlertTriangle size={16} style={{ marginRight: 6, verticalAlign: 'middle', color: 'var(--accent-orange)' }} />Inventory Alerts <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400, marginLeft: 8 }}>CASE + WHERE stock {'<'} threshold</span></h3></div>
+        <div className="card-header"><h3><AlertTriangle size={16} style={{ marginRight: 6, verticalAlign: 'middle', color: 'var(--accent-orange)' }} />Inventory Alerts</h3></div>
         <div className="card-body">
           {data.inventoryAlerts.map(a => (
             <div key={a.productId} className={`alert-item ${a.status.toLowerCase()}`}>
@@ -201,14 +247,62 @@ export default function Analytics() {
                 <div style={{ fontWeight: 500 }}>{a.productName}</div>
                 <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Product #{a.productId}</div>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontWeight: 700, fontSize: 18 }}>{a.currentStock}</div>
-                <div style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 600, color: a.status === 'Critical' ? 'var(--accent-red)' : a.status === 'Low' ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{a.status}</div>
+              <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 18 }}>{a.currentStock}</div>
+                  <div style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 600, color: a.status === 'Critical' ? 'var(--accent-red)' : a.status === 'Low' ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{a.status}</div>
+                </div>
+                <button className="btn btn-sm btn-primary" onClick={() => openPOModal(a.productId)} style={{ padding: '4px 8px', fontSize: 11 }}>
+                  <Plus size={12} /> Create PO
+                </button>
               </div>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Create PO Modal */}
+      {showPOModal && poProduct && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: 440 }}>
+            <div className="modal-header">
+              <h3>Create Purchase Order</h3>
+              <button className="close-btn" onClick={() => setShowPOModal(false)}><X size={20} /></button>
+            </div>
+            <div className="modal-body">
+              <div style={{ padding: '12px 16px', background: 'var(--bg-primary)', borderRadius: 8, marginBottom: 16 }}>
+                <div style={{ fontWeight: 600 }}>{poProduct.name}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Current Stock: {poProduct.stockQuantity} • Price: ₹{poProduct.price}</div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Supplier</label>
+                <select className="form-select" value={poSupplierId} onChange={e => setPOSupplierId(Number(e.target.value))}>
+                  {suppliers.length === 0 && <option value={0}>No suppliers available</option>}
+                  {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Order Quantity</label>
+                <input className="form-input" type="number" value={poQty} onChange={e => setPOQty(Number(e.target.value))} min={1} />
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12 }}>
+                Estimated Cost: <strong>₹{(poProduct.price * poQty).toLocaleString()}</strong>
+              </div>
+              {poMsg && (
+                <div style={{ padding: '8px 12px', borderRadius: 8, fontSize: 12, fontWeight: 500, marginBottom: 12,
+                  background: poMsg.startsWith('✓') ? 'var(--accent-green-light)' : 'var(--accent-red-light)',
+                  color: poMsg.startsWith('✓') ? 'var(--accent-green)' : 'var(--accent-red)' }}>
+                  {poMsg}
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setShowPOModal(false)}>Cancel</button>
+                <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleCreatePO} disabled={!poSupplierId || poQty <= 0}>Create PO</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
