@@ -1,4 +1,4 @@
-import { ShoppingCart } from 'lucide-react';
+
 
 interface LogoProps {
   size?: number;
