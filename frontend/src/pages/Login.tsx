@@ -199,7 +199,7 @@ export default function Login({ onLogin }: LoginProps) {
         <div className="auth-brand" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
             <Logo size={48} />
-            <span style={{ fontFamily: "'Outfit', 'Montserrat', 'Trebuchet MS', sans-serif", fontWeight: 700, fontSize: 15, letterSpacing: '-0.3px', background: 'linear-gradient(135deg, #64748b, #0f172a)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>RetailStore</span>
+            <span style={{ fontFamily: "'Outfit', 'Montserrat', 'Trebuchet MS', sans-serif", fontWeight: 800, fontSize: 24, letterSpacing: '-0.5px', background: 'linear-gradient(135deg, #94a3b8, #475569)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1 }}>RetailStore</span>
           </div>
           <h1 style={{ marginTop: 0 }}>
             {mode === 'login' ? 'Welcome Back' : mode === 'signup' ? 'Create Account' : 'Reset Password'}
