@@ -1,46 +1,49 @@
 import type { Product, Customer, Order, DashboardStats, AnalyticsData } from '../types';
 
-const API_BASE = 'https://retail-store-k6pr.onrender.com/api';
+const API_BASE = (
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.DEV ? 'http://localhost:8080/api' : 'https://retail-store-k6pr.onrender.com/api')
+).replace(/\/$/, '');
 
-// Helper: get current user's storeId from localStorage
-export function getStoreId(): number | null {
+function getAuthToken(): string | null {
   try {
     const raw = localStorage.getItem('retailstore-user');
-    if (raw) {
-      const u = JSON.parse(raw);
-      return u.storeId || null;
-    }
-  } catch {}
-  return null;
+    if (!raw) return null;
+    const user = JSON.parse(raw) as { token?: string };
+    return user.token || null;
+  } catch {
+    return null;
+  }
 }
 
-// Append storeId query param to any path
-function withStoreId(path: string): string {
-  const sid = getStoreId();
-  if (!sid) return path;
-  const sep = path.includes('?') ? '&' : '?';
-  return `${path}${sep}storeId=${sid}`;
+function buildHeaders(withJson = true): HeadersInit {
+  const headers: Record<string, string> = {};
+  if (withJson) headers['Content-Type'] = 'application/json';
+  const token = getAuthToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return headers;
 }
 
-// Convert raw API errors to user-friendly messages
+function buildUrl(path: string): string {
+  return `${API_BASE}${path}`;
+}
+
 function friendlyApiError(status: number, serverMsg: string): string {
-  // If the server returned a readable message, use it
   if (serverMsg && !serverMsg.startsWith('{') && !serverMsg.startsWith('<') && serverMsg.length < 200) {
     return serverMsg;
   }
-  // Generic friendly messages based on HTTP status
   if (status === 400) return 'The request was invalid. Please check your input and try again.';
   if (status === 401) return 'You are not authorized. Please log in again.';
   if (status === 403) return 'You do not have permission to perform this action.';
   if (status === 404) return 'The requested resource was not found.';
   if (status === 409) return 'A conflict occurred. The item may already exist.';
   if (status >= 500) return 'The server encountered an issue. Please try again in a moment.';
-  return `Request failed. Please try again.`;
+  return 'Request failed. Please try again.';
 }
 
 async function apiFetch<T>(path: string, fallback: () => T): Promise<T> {
   try {
-    const res = await fetch(`${API_BASE}${withStoreId(path)}`);
+    const res = await fetch(buildUrl(path), { headers: buildHeaders(false) });
     if (res.ok) return await res.json() as T;
     console.warn(`API ${path} returned ${res.status}`);
   } catch (err) {
@@ -50,9 +53,9 @@ async function apiFetch<T>(path: string, fallback: () => T): Promise<T> {
 }
 
 async function apiPost<T>(path: string, body: any): Promise<T> {
-  const res = await fetch(`${API_BASE}${withStoreId(path)}`, {
+  const res = await fetch(buildUrl(path), {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: buildHeaders(true),
     body: JSON.stringify(body)
   });
   if (!res.ok) {
@@ -66,9 +69,9 @@ async function apiPost<T>(path: string, body: any): Promise<T> {
 }
 
 async function apiPut<T>(path: string, body: any): Promise<T> {
-  const res = await fetch(`${API_BASE}${withStoreId(path)}`, {
+  const res = await fetch(buildUrl(path), {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: buildHeaders(true),
     body: JSON.stringify(body)
   });
   if (!res.ok) {
@@ -82,7 +85,10 @@ async function apiPut<T>(path: string, body: any): Promise<T> {
 }
 
 async function apiDelete(path: string): Promise<void> {
-  const res = await fetch(`${API_BASE}${withStoreId(path)}`, { method: 'DELETE' });
+  const res = await fetch(buildUrl(path), {
+    method: 'DELETE',
+    headers: buildHeaders(false)
+  });
   if (!res.ok) {
     const errText = await res.text().catch(() => '');
     throw new Error(friendlyApiError(res.status, errText));
@@ -90,9 +96,9 @@ async function apiDelete(path: string): Promise<void> {
 }
 
 async function apiPatch<T>(path: string, body: any): Promise<T> {
-  const res = await fetch(`${API_BASE}${withStoreId(path)}`, {
+  const res = await fetch(buildUrl(path), {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: buildHeaders(true),
     body: JSON.stringify(body)
   });
   if (!res.ok) {
@@ -116,7 +122,6 @@ export async function fetchProducts(): Promise<Product[]> {
 }
 
 export async function createProduct(product: any): Promise<Product> {
-  // Map frontend 'category' string to backend 'categoryName'
   const body = {
     name: product.name,
     categoryName: product.category || product.categoryName,
@@ -174,7 +179,15 @@ export async function updateOrderStatus(id: number, status: string): Promise<any
 }
 
 // ===================== SUPPLIERS =====================
-export interface Supplier { id: number; name: string; contactPerson: string; email: string; phone: string; category: string; status: string; }
+export interface Supplier {
+  id: number;
+  name: string;
+  contactPerson: string;
+  email: string;
+  phone: string;
+  category: string;
+  status: string;
+}
 
 export async function fetchSuppliers(): Promise<Supplier[]> {
   return apiFetch('/suppliers', () => []);
@@ -194,9 +207,15 @@ export async function deleteSupplier(id: number): Promise<void> {
 
 // ===================== PURCHASE ORDERS =====================
 export interface PurchaseOrder {
-  id: number; supplierId: number; supplierName: string; productNames: string;
-  totalAmount: number; status: string; orderDate: string;
-  orderedQuantity?: number; receivedQuantity?: number;
+  id: number;
+  supplierId: number;
+  supplierName: string;
+  productNames: string;
+  totalAmount: number;
+  status: string;
+  orderDate: string;
+  orderedQuantity?: number;
+  receivedQuantity?: number;
 }
 
 export async function fetchPOs(): Promise<PurchaseOrder[]> {
@@ -216,10 +235,20 @@ export async function updateProductStock(productId: number, additionalStock: num
 }
 
 // ===================== DUES =====================
-export interface Due { id: number; type: string; entityId: number; entityName: string; contact: string; totalDue: number; status: string; lastOrderDate: string; pendingOrders: number; }
+export interface Due {
+  id: number;
+  type: string;
+  entityId: number;
+  entityName: string;
+  contact: string;
+  totalDue: number;
+  status: string;
+  lastOrderDate: string;
+  pendingOrders: number;
+}
 
 export async function fetchDues(type?: string): Promise<Due[]> {
-  const path = type ? `/dues?type=${type}` : '/dues';
+  const path = type ? `/dues?type=${encodeURIComponent(type)}` : '/dues';
   return apiFetch(path, () => []);
 }
 
@@ -227,9 +256,21 @@ export async function createDue(due: any): Promise<Due> {
   return apiPost('/dues', due);
 }
 
+export async function payDue(id: number, amount: number): Promise<Due> {
+  return apiPut(`/dues/${id}/pay`, { amount });
+}
+
 // ===================== AUDIT LOGS =====================
 export type Severity = 'info' | 'warning' | 'critical';
-export interface LogEntry { id: number; user: string; action: string; target: string; severity: string; timestamp: string; iconStr: string; }
+export interface LogEntry {
+  id: number;
+  user: string;
+  action: string;
+  target: string;
+  severity: string;
+  timestamp: string;
+  iconStr: string;
+}
 
 export async function fetchAuditLogs(): Promise<LogEntry[]> {
   return apiFetch('/audit-logs', () => []);
@@ -240,7 +281,15 @@ export async function logAction(log: any) {
 }
 
 // ===================== RETURNS =====================
-export interface ReturnRequest { id: number; orderId: number; customerName: string; amount: number; reason: string; status: string; createdAt: string; }
+export interface ReturnRequest {
+  id: number;
+  orderId: number;
+  customerName: string;
+  amount: number;
+  reason: string;
+  status: string;
+  createdAt: string;
+}
 
 export async function fetchReturns(): Promise<ReturnRequest[]> {
   return apiFetch('/returns', () => []);
@@ -251,15 +300,21 @@ export async function createReturn(ret: any): Promise<ReturnRequest> {
 }
 
 export async function updateReturnStatus(id: number, status: string): Promise<ReturnRequest> {
-  const res = await fetch(`${API_BASE}/returns/${id}/status`, {
-    method: 'PUT', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status })
-  });
-  return res.json();
+  return apiPut(`/returns/${id}/status`, { status });
 }
 
 // ===================== PROMOTIONS =====================
-export interface Promotion { id: number; name: string; type: string; description: string; code: string; discountValue: number; status: string; startDate: string; endDate: string; }
+export interface Promotion {
+  id: number;
+  name: string;
+  type: string;
+  description: string;
+  code: string;
+  discountValue: number;
+  status: string;
+  startDate: string;
+  endDate: string;
+}
 
 export async function fetchPromotions(): Promise<Promotion[]> {
   return apiFetch('/promotions', () => []);
@@ -279,16 +334,31 @@ export async function deletePromotion(id: number): Promise<void> {
 }
 
 // ===================== CATEGORIES =====================
-export interface Category { id: number; name: string; description: string; }
+export interface Category {
+  id: number;
+  name: string;
+  description: string;
+}
 
 export async function fetchCategories(): Promise<Category[]> {
   return apiFetch('/categories', () => []);
 }
 
-// ===================== USERS (from backend) =====================
-export async function fetchUsers(storeId?: number): Promise<any[]> {
-  const path = storeId ? `/auth/users?storeId=${storeId}` : '/auth/users';
-  return apiFetch(path, () => []);
+// ===================== USERS =====================
+export async function fetchUsers(_storeId?: number): Promise<any[]> {
+  return apiFetch('/auth/users', () => []);
+}
+
+export async function updateUserStatus(id: number, status: string): Promise<any> {
+  return apiPut(`/auth/users/${id}/status`, { status });
+}
+
+export async function updateUserRole(id: number, role: string): Promise<any> {
+  return apiPut(`/auth/users/${id}/role`, { role });
+}
+
+export async function deleteUser(id: number): Promise<void> {
+  return apiDelete(`/auth/users/${id}`);
 }
 
 // ===================== DASHBOARD & ANALYTICS =====================
@@ -300,13 +370,11 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
 }
 
 export async function fetchAnalytics(): Promise<AnalyticsData> {
-  // Build analytics from real data
   try {
-    const [products, orders, _customers] = await Promise.all([
-      fetchProducts(), fetchOrders(), fetchCustomers()
+    const [products, orders] = await Promise.all([
+      fetchProducts(), fetchOrders()
     ]);
 
-    // Sales trends: group orders by month
     const monthMap: Record<string, { sales: number; orders: number }> = {};
     orders.forEach(o => {
       const month = o.orderDate?.substring(0, 7) || 'Unknown';
@@ -318,7 +386,6 @@ export async function fetchAnalytics(): Promise<AnalyticsData> {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([month, data]) => ({ month, ...data }));
 
-    // Top products by revenue from order items
     const prodRevenue: Record<string, { name: string; sales: number; revenue: number }> = {};
     orders.forEach(o => {
       (o.items || []).forEach((item: any) => {
@@ -333,7 +400,6 @@ export async function fetchAnalytics(): Promise<AnalyticsData> {
       .slice(0, 5)
       .map((p, i) => ({ ...p, rank: i + 1 }));
 
-    // Category distribution
     const catMap: Record<string, number> = {};
     products.forEach(p => {
       const cat = p.category || 'Uncategorized';
@@ -344,7 +410,6 @@ export async function fetchAnalytics(): Promise<AnalyticsData> {
       category, count, percentage: Math.round(count / total * 100)
     }));
 
-    // Top customers
     const custSpend: Record<number, { id: number; name: string; totalOrders: number; totalSpent: number }> = {};
     orders.forEach(o => {
       if (!custSpend[o.customerId]) custSpend[o.customerId] = { id: o.customerId, name: o.customerName, totalOrders: 0, totalSpent: 0 };
@@ -356,14 +421,12 @@ export async function fetchAnalytics(): Promise<AnalyticsData> {
       .slice(0, 5)
       .map((c, i) => ({ ...c, rank: i + 1 }));
 
-    // Monthly revenue with growth
     const monthlyRevenue = salesTrends.map((m, i) => ({
       month: m.month,
       revenue: m.sales,
       growth: i === 0 ? 0 : Math.round((m.sales - salesTrends[i - 1].sales) / (salesTrends[i - 1].sales || 1) * 100 * 10) / 10
     }));
 
-    // Inventory alerts
     const inventoryAlerts = products
       .filter(p => p.stockQuantity <= 20)
       .sort((a, b) => a.stockQuantity - b.stockQuantity)
@@ -399,6 +462,8 @@ export function exportToCSV(data: any[], filename: string) {
   const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = `${filename}.csv`; a.click();
+  a.href = url;
+  a.download = `${filename}.csv`;
+  a.click();
   URL.revokeObjectURL(url);
 }

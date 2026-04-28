@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { User, Mail, Shield, LogOut, Check, AlertCircle, Trash2 } from 'lucide-react';
-import { type UserInfo, ROLES, deleteStoreApi } from '../services/auth';
-
-const API_BASE = 'https://retail-store-k6pr.onrender.com/api';
+import { type UserInfo, ROLES, deleteStoreApi, updateProfileApi, updatePasswordApi } from '../services/auth';
 
 interface SettingsProps { onLogout: () => void; user?: UserInfo; onUpdateUser?: (u: UserInfo) => void; }
 
@@ -31,21 +29,12 @@ export default function Settings({ onLogout, user, onUpdateUser }: SettingsProps
     setPwdSaving(true);
     setPwdMsg(null);
     try {
-      const res = await fetch(`${API_BASE}/auth/update-password`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: userInfo.email, currentPassword: curPwd, newPassword: newPwd }),
-      });
-      if (res.ok) {
-        setPwdMsg({ text: 'Password updated successfully!', ok: true });
-        setCurPwd('');
-        setNewPwd('');
-      } else {
-        const errText = await res.text();
-        setPwdMsg({ text: errText || 'Failed to update password', ok: false });
-      }
-    } catch {
-      setPwdMsg({ text: 'Network error', ok: false });
+      await updatePasswordApi(curPwd, newPwd);
+      setPwdMsg({ text: 'Password updated successfully!', ok: true });
+      setCurPwd('');
+      setNewPwd('');
+    } catch (error: any) {
+      setPwdMsg({ text: error?.message || 'Failed to update password', ok: false });
     } finally {
       setPwdSaving(false);
       setTimeout(() => setPwdMsg(null), 4000);
@@ -59,36 +48,17 @@ export default function Settings({ onLogout, user, onUpdateUser }: SettingsProps
     setMsg(null);
 
     try {
-      const res = await fetch(`${API_BASE}/auth/update-profile`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          currentEmail: userInfo.email,
-          name: name.trim(),
-          email: email.trim(),
-        }),
-      });
-
-      if (res.ok) {
-        const updated = await res.json();
-        const newUser: UserInfo = {
-          name: updated.name,
-          email: updated.email,
-          role: updated.role || userInfo.role,
-          avatar: updated.avatar || userInfo.avatar,
-          storeId: updated.storeId || userInfo.storeId,
-        };
-
-        // Update parent state
-        if (onUpdateUser) onUpdateUser(newUser);
-
-        setMsg({ text: 'Profile updated successfully!', ok: true });
-      } else {
-        const errText = await res.text();
-        setMsg({ text: errText || 'Failed to update profile', ok: false });
-      }
-    } catch {
-      setMsg({ text: 'Network error — could not reach server', ok: false });
+      const updated = await updateProfileApi(name.trim(), email.trim());
+      const newUser: UserInfo = {
+        ...userInfo,
+        ...updated,
+        token: userInfo.token,
+      };
+      if (onUpdateUser) onUpdateUser(newUser);
+      localStorage.setItem('retailstore-user', JSON.stringify(newUser));
+      setMsg({ text: 'Profile updated successfully!', ok: true });
+    } catch (error: any) {
+      setMsg({ text: error?.message || 'Failed to update profile', ok: false });
     } finally {
       setSaving(false);
       setTimeout(() => setMsg(null), 3000);
@@ -293,3 +263,4 @@ export default function Settings({ onLogout, user, onUpdateUser }: SettingsProps
     </>
   );
 }
+

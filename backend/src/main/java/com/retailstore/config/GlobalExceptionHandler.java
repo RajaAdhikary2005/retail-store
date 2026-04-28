@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -13,14 +14,27 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, Object>> handleResponseStatusException(ResponseStatusException ex) {
+        Map<String, Object> error = new HashMap<>();
+        HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
+        error.put("timestamp", LocalDateTime.now().toString());
+        error.put("status", status.value());
+        error.put("error", status.getReasonPhrase());
+        error.put("message", ex.getReason() != null ? ex.getReason() : status.getReasonPhrase());
+        return new ResponseEntity<>(error, status);
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
+        boolean notFound = ex.getMessage() != null && ex.getMessage().toLowerCase().contains("not found");
+        HttpStatus status = notFound ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
         Map<String, Object> error = new HashMap<>();
         error.put("timestamp", LocalDateTime.now().toString());
-        error.put("status", HttpStatus.NOT_FOUND.value());
-        error.put("error", "Not Found");
+        error.put("status", status.value());
+        error.put("error", status.getReasonPhrase());
         error.put("message", ex.getMessage());
-        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(error, status);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -37,13 +37,19 @@ public class ProductService {
         return toDTO(product);
     }
 
+    public ProductDTO getProductById(Integer id, Long storeId) {
+        Product product = findOwnedProduct(id, storeId);
+        return toDTO(product);
+    }
+
     public ProductDTO createProduct(ProductDTO dto) {
         Category category;
         if (dto.getCategoryId() != null) {
             category = categoryRepository.findById(dto.getCategoryId())
                     .orElseThrow(() -> new RuntimeException("Category not found"));
         } else if (dto.getCategoryName() != null) {
-            category = categoryRepository.findByName(dto.getCategoryName())
+            category = categoryRepository.findByNameAndStoreId(dto.getCategoryName(), storeId)
+                    .or(() -> categoryRepository.findByName(dto.getCategoryName()))
                     .orElseGet(() -> {
                         Category newCat = new Category();
                         newCat.setName(dto.getCategoryName());
@@ -100,11 +106,35 @@ public class ProductService {
                     .orElseThrow(() -> new RuntimeException("Category not found"));
             product.setCategory(category);
         } else if (dto.getCategoryName() != null) {
-            Category category = categoryRepository.findByName(dto.getCategoryName())
+            Category category = categoryRepository.findByNameAndStoreId(dto.getCategoryName(), storeId)
+                    .or(() -> categoryRepository.findByName(dto.getCategoryName()))
                     .orElseGet(() -> {
                         Category newCat = new Category();
                         newCat.setName(dto.getCategoryName());
                         if (product.getStoreId() != null) newCat.setStoreId(product.getStoreId());
+                        return categoryRepository.save(newCat);
+                    });
+            product.setCategory(category);
+        }
+        if (dto.getPrice() != null) product.setPrice(dto.getPrice());
+        if (dto.getStockQuantity() != null) product.setStockQuantity(dto.getStockQuantity());
+        if (dto.getDescription() != null) product.setDescription(dto.getDescription());
+        return toDTO(productRepository.save(product));
+    }
+
+    public ProductDTO updateProduct(Integer id, ProductDTO dto, Long storeId) {
+        Product product = findOwnedProduct(id, storeId);
+        if (dto.getName() != null) product.setName(dto.getName());
+        if (dto.getCategoryId() != null) {
+            Category category = categoryRepository.findById(dto.getCategoryId())
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+            product.setCategory(category);
+        } else if (dto.getCategoryName() != null) {
+            Category category = categoryRepository.findByName(dto.getCategoryName())
+                    .orElseGet(() -> {
+                        Category newCat = new Category();
+                        newCat.setName(dto.getCategoryName());
+                        newCat.setStoreId(storeId);
                         return categoryRepository.save(newCat);
                     });
             product.setCategory(category);
@@ -122,11 +152,31 @@ public class ProductService {
         productRepository.deleteById(id);
     }
 
+    public void deleteProduct(Integer id, Long storeId) {
+        Product product = findOwnedProduct(id, storeId);
+        productRepository.delete(product);
+    }
+
     public ProductDTO addStock(Integer id, int additionalStock) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
         product.setStockQuantity((product.getStockQuantity() != null ? product.getStockQuantity() : 0) + additionalStock);
         return toDTO(productRepository.save(product));
+    }
+
+    public ProductDTO addStock(Integer id, int additionalStock, Long storeId) {
+        Product product = findOwnedProduct(id, storeId);
+        product.setStockQuantity((product.getStockQuantity() != null ? product.getStockQuantity() : 0) + additionalStock);
+        return toDTO(productRepository.save(product));
+    }
+
+    private Product findOwnedProduct(Integer id, Long storeId) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+        if (storeId == null || product.getStoreId() == null || !storeId.equals(product.getStoreId())) {
+            throw new RuntimeException("Product not found with id: " + id);
+        }
+        return product;
     }
 
     private ProductDTO toDTO(Product product) {

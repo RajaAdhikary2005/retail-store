@@ -32,4 +32,13 @@ public class HealthController {
             return ResponseEntity.status(500).body(response);
         }
     }
+
+    @GetMapping("/api")
+    public ResponseEntity<Map<String, String>> apiRoot() {
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "ok");
+        response.put("service", "retail-store-api");
+        response.put("message", "Retail Store API is running");
+        return ResponseEntity.ok(response);
+    }
 }

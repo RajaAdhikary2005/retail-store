@@ -2,6 +2,7 @@ package com.retailstore.controller;
 
 import com.retailstore.model.Category;
 import com.retailstore.repository.CategoryRepository;
+import com.retailstore.security.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -13,9 +14,12 @@ public class CategoryController {
     @Autowired
     private CategoryRepository categoryRepository;
 
+    @Autowired
+    private SecurityUtils securityUtils;
+
     @GetMapping
-    public List<Category> getAllCategories(@RequestParam(required = false) Long storeId) {
-        if (storeId != null) return categoryRepository.findByStoreId(storeId);
-        return categoryRepository.findAll();
+    public List<Category> getAllCategories() {
+        Long storeId = securityUtils.currentStoreId();
+        return categoryRepository.findByStoreId(storeId);
     }
 }

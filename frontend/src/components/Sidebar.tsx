@@ -1,6 +1,6 @@
 import { LayoutDashboard, Package, Users, ShoppingCart, BarChart3, Settings, LogOut, IndianRupee, UserCheck, Search, AlertTriangle, RotateCcw, Shield, FileText, Truck, Tag } from 'lucide-react';
 import Logo from './Logo';
-import { type UserRole, ROLES, canAccessPage, getPendingCountForAdmin } from '../services/auth';
+import { type UserRole, ROLES, canAccessPage } from '../services/auth';
 import { type UserInfo } from '../services/auth';
 
 interface SidebarProps {
@@ -43,6 +43,7 @@ const allNavItems = [
 ];
 
 export default function Sidebar({ currentPage, onNavigate, isOpen, userRole, user }: SidebarProps) {
+  void user;
   // Filter nav items based on role permissions
   const navItems = allNavItems
     .map(section => ({
@@ -52,7 +53,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, userRole, use
     .filter(section => section.items.length > 0);
 
   const roleInfo = ROLES[userRole];
-  const pendingCount = user && userRole === 'admin' ? getPendingCountForAdmin(user.email) : 0;
+  const pendingCount = 0;
 
   return (
     <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
