@@ -50,6 +50,9 @@ public class AuthController {
     @Value("${spring.mail.username:noreply@retailstore.local}")
     private String mailFrom;
 
+    @Value("${spring.mail.password:}")
+    private String mailPassword;
+
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody Map<String, Object> body) {
         String email = normalizeEmail((String) body.get("email"));
@@ -150,6 +153,10 @@ public class AuthController {
         user.setResetOtp(otp);
         user.setResetOtpExpiry(LocalDateTime.now().plusMinutes(10));
         userRepository.save(user);
+
+        if (!isMailConfigured()) {
+            return ResponseEntity.status(503).body("Password reset email service is not configured.");
+        }
 
         String storeName = "Retail Store";
         String adminName = "System Admin";
@@ -416,5 +423,11 @@ public class AuthController {
             return ("" + parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
         }
         return name.substring(0, Math.min(2, name.length())).toUpperCase();
+    }
+
+    private boolean isMailConfigured() {
+        String from = mailFrom == null ? "" : mailFrom.trim();
+        String pwd = mailPassword == null ? "" : mailPassword.trim();
+        return !from.isBlank() && !pwd.isBlank() && !from.equalsIgnoreCase("noreply@retailstore.local");
     }
 }
