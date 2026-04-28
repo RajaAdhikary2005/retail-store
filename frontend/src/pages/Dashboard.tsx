@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { IndianRupee, ShoppingCart, Users, TrendingUp, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { IndianRupee, ShoppingCart, Users, TrendingUp, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Tooltip, Legend, Filler } from 'chart.js';
 import { fetchDashboardStats, fetchOrders, fetchAnalytics } from '../services/api';
@@ -89,9 +89,9 @@ export default function Dashboard() {
             <div className="stat-info">
               <h4>{c.title}</h4>
               <div className="stat-value">{c.value}</div>
-              <div className={`stat-change ${c.change >= 0 ? 'positive' : 'negative'}`}>
-                {c.change >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-                {Math.abs(c.change)}% from last month
+              <div className={`stat-change ${c.change > 0 ? 'positive' : c.change < 0 ? 'negative' : 'neutral'}`}>
+                {c.change > 0 ? <ArrowUpRight size={14} /> : c.change < 0 ? <ArrowDownRight size={14} /> : <Minus size={14} />}
+                {c.change === 0 ? 'No change from last month' : `${Math.abs(c.change)}% from last month`}
               </div>
             </div>
             <div className={`stat-icon ${c.color}`}><c.icon size={22} /></div>

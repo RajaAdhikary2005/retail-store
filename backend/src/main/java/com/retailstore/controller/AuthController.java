@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -214,9 +215,15 @@ public class AuthController {
             helper.setTo(user.getEmail());
             helper.setSubject(storeName + " - Password Reset OTP");
 
+            ClassPathResource logoResource = new ClassPathResource("email/retailstore-logo.png");
+            boolean hasInlineLogo = logoResource.exists();
+            String logoMarkup = hasInlineLogo
+                    ? "<img src='cid:retailstoreLogo' alt='Retail Store Logo' style='width: 72px; height: 72px; object-fit: contain; border-radius: 50%;'/>"
+                    : "<div style='font-size: 30px; font-weight: 700; color: #475569;'>RetailStore</div>";
+
             String htmlContent = "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333; border: 1px solid #eaeaea; border-radius: 10px;'>"
                     + "<div style='text-align: center; margin-bottom: 20px;'>"
-                    + "<img src='https://store-raja.vercel.app/retailstore-logo.png' alt='Retail Store Logo' style='max-width: 180px;'/>"
+                    + logoMarkup
                     + "</div>"
                     + "<h2 style='color: #1f2937;'>Hello " + user.getName() + ",</h2>"
                     + "<p style='font-size: 15px; line-height: 1.5;'>We received a request to reset your password for your account at <b>" + storeName + "</b>.</p>"
@@ -234,6 +241,9 @@ public class AuthController {
                     + "</div>";
 
             helper.setText(htmlContent, true);
+            if (hasInlineLogo) {
+                helper.addInline("retailstoreLogo", logoResource, "image/png");
+            }
             mailSender.send(message);
         } catch (Exception e) {
             logger.error("Failed to send password reset email", e);
