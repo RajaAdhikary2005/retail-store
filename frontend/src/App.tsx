@@ -131,9 +131,7 @@ function App() {
           <div className="footer-brand">
             Made with <Heart size={12} style={{ color: '#ef4444', fill: '#ef4444', display: 'inline', verticalAlign: 'middle', margin: '0 3px' }} /> by Raja Adhikary
           </div>
-          <div>
-            © {new Date().getFullYear()} Raja Adhikary. All rights reserved.
-          </div>
+      
           <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px', textAlign: 'center' }}>
             Copyright © 2026 All Rights Reserved by Raja Adhikary
           </div>
