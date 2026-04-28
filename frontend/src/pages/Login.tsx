@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { Eye, EyeOff, Store, CheckCircle } from 'lucide-react';
 import Logo from '../components/Logo';
 import {
-  USERS, ROLES,
+  ROLES,
   type UserInfo, type UserRole, type Store as StoreType,
-  isEmailPending, fetchStoresFromApi,
+  fetchStoresFromApi,
   loginApi, signupApi, resetPasswordApi, verifyOtpApi, setNewPasswordApi
 } from '../services/auth';
 
@@ -82,14 +82,6 @@ export default function Login({ onLogin }: LoginProps) {
       // --- Signup Flow ---
       if (!signupName.trim()) {
         setError('Please enter your full name');
-        return;
-      }
-      if (USERS[email.toLowerCase()]) {
-        setError('An account with this email already exists. Try signing in.');
-        return;
-      }
-      if (isEmailPending(email)) {
-        setError('A signup request with this email is already pending approval.');
         return;
       }
       if (password.length < 6) {

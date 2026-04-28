@@ -43,6 +43,15 @@ public class OrderService {
         return toDTO(order);
     }
 
+    public OrderDTO getOrderById(Integer id, Long storeId) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+        if (order.getStoreId() == null || !order.getStoreId().equals(storeId)) {
+            throw new RuntimeException("Order not found with id: " + id);
+        }
+        return toDTO(order);
+    }
+
     public OrderDTO createOrder(OrderDTO dto) {
         Customer customer = customerRepository.findById(dto.getCustomerId())
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
@@ -79,6 +88,9 @@ public class OrderService {
     public OrderDTO createOrder(OrderDTO dto, Long storeId) {
         Customer customer = customerRepository.findById(dto.getCustomerId())
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
+        if (customer.getStoreId() == null || !customer.getStoreId().equals(storeId)) {
+            throw new RuntimeException("Customer not found");
+        }
 
         Order order = new Order();
         order.setCustomer(customer);
@@ -92,6 +104,9 @@ public class OrderService {
             for (OrderDTO.OrderItemDTO itemDto : dto.getItems()) {
                 Product product = productRepository.findById(itemDto.getProductId())
                         .orElseThrow(() -> new RuntimeException("Product not found: " + itemDto.getProductId()));
+                if (product.getStoreId() == null || !product.getStoreId().equals(storeId)) {
+                    throw new RuntimeException("Product not found: " + itemDto.getProductId());
+                }
                 
                 OrderItem item = new OrderItem();
                 item.setOrder(order);
@@ -113,6 +128,16 @@ public class OrderService {
     public OrderDTO updateOrderStatus(Integer id, String status) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+        order.setStatus(status);
+        return toDTO(orderRepository.save(order));
+    }
+
+    public OrderDTO updateOrderStatus(Integer id, String status, Long storeId) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+        if (order.getStoreId() == null || !order.getStoreId().equals(storeId)) {
+            throw new RuntimeException("Order not found with id: " + id);
+        }
         order.setStatus(status);
         return toDTO(orderRepository.save(order));
     }

@@ -1,9 +1,8 @@
 package com.retailstore.controller;
 
 import com.retailstore.model.PurchaseOrder;
-import com.retailstore.model.Product;
 import com.retailstore.repository.PurchaseOrderRepository;
-import com.retailstore.repository.ProductRepository;
+import com.retailstore.security.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,25 +19,30 @@ public class POController {
     private PurchaseOrderRepository poRepository;
 
     @Autowired
-    private ProductRepository productRepository;
+    private SecurityUtils securityUtils;
 
     @GetMapping
-    public List<PurchaseOrder> getAllPOs(@RequestParam(required = false) Long storeId) {
-        if (storeId != null) return poRepository.findByStoreId(storeId);
-        return poRepository.findAll();
+    public List<PurchaseOrder> getAllPOs() {
+        Long storeId = securityUtils.currentStoreId();
+        return poRepository.findByStoreId(storeId);
     }
 
     @PostMapping
-    public PurchaseOrder createPO(@RequestBody PurchaseOrder po, @RequestParam(required = false) Long storeId) {
-        if (storeId != null) po.setStoreId(storeId);
+    public PurchaseOrder createPO(@RequestBody PurchaseOrder po) {
+        Long storeId = securityUtils.currentStoreId();
+        po.setStoreId(storeId);
         return poRepository.save(po);
     }
 
     @PatchMapping("/{id}/status")
-    public ResponseEntity<PurchaseOrder> updatePOStatus(
+    public ResponseEntity<?> updatePOStatus(
             @PathVariable Long id,
             @RequestBody Map<String, Object> body) {
+        Long storeId = securityUtils.currentStoreId();
         return poRepository.findById(id).map(po -> {
+            if (po.getStoreId() == null || !storeId.equals(po.getStoreId())) {
+                return ResponseEntity.notFound().build();
+            }
             String newStatus = (String) body.get("status");
             Integer receivedQty = body.get("receivedQuantity") != null
                     ? ((Number) body.get("receivedQuantity")).intValue()

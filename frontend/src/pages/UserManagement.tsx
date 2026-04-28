@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Users, Shield, UserX, ArrowUpCircle, ArrowDownCircle, Trash2 } from 'lucide-react';
-import { fetchUsers, logAction } from '../services/api';
+import {
+  fetchUsers,
+  logAction,
+  updateUserStatus as updateUserStatusApi,
+  updateUserRole as updateUserRoleApi,
+  deleteUser as deleteUserApi
+} from '../services/api';
 import { ROLES, type UserRole, type UserInfo } from '../services/auth';
 
 interface ManagedUser { id: number; name: string; email: string; role: UserRole; avatar: string; status: string; storeId?: number; }
@@ -39,22 +45,16 @@ export default function UserManagement({ user }: UserManagementProps) {
 
   const updateUserStatus = async (id: number, status: string) => {
     try {
-      await fetch(`https://retail-store-k6pr.onrender.com/api/auth/users/${id}/status`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status })
-      });
+      await updateUserStatusApi(id, status);
       setUsers(prev => prev.map(u => u.id === id ? { ...u, status } : u));
-    } catch {}
+    } catch {
+      flash('Could not update status. Please try again.');
+    }
   };
 
   const updateUserRole = async (id: number, newRole: string) => {
     try {
-      await fetch(`https://retail-store-k6pr.onrender.com/api/auth/users/${id}/role`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: newRole })
-      });
+      await updateUserRoleApi(id, newRole);
       setUsers(prev => prev.map(u => u.id === id ? { ...u, role: newRole as UserRole } : u));
     } catch {
       flash('Could not update role. Please try again.');
@@ -64,9 +64,7 @@ export default function UserManagement({ user }: UserManagementProps) {
   const deleteUser = async (u: ManagedUser) => {
     if (!confirm(`Are you sure you want to permanently delete ${u.name}?`)) return;
     try {
-      await fetch(`https://retail-store-k6pr.onrender.com/api/auth/users/${u.id}`, {
-        method: 'DELETE',
-      });
+      await deleteUserApi(u.id);
       setUsers(prev => prev.filter(user => user.id !== u.id));
       logAction({ user: user?.name || 'Admin', action: `Deleted user`, target: `${u.name} (${u.role})`, severity: 'warning', iconStr: 'Trash2' });
       flash(`${u.name} has been deleted.`);

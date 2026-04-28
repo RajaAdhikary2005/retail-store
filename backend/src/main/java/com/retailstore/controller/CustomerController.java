@@ -3,6 +3,7 @@ package com.retailstore.controller;
 import com.retailstore.model.Customer;
 import com.retailstore.dto.CustomerDTO;
 import com.retailstore.repository.CustomerRepository;
+import com.retailstore.security.SecurityUtils;
 import com.retailstore.service.CustomerService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,29 +18,38 @@ public class CustomerController {
 
     private final CustomerService customerService;
     private final CustomerRepository customerRepository;
+    private final SecurityUtils securityUtils;
 
-    public CustomerController(CustomerService customerService, CustomerRepository customerRepository) {
+    public CustomerController(
+            CustomerService customerService,
+            CustomerRepository customerRepository,
+            SecurityUtils securityUtils
+    ) {
         this.customerService = customerService;
         this.customerRepository = customerRepository;
+        this.securityUtils = securityUtils;
     }
 
     @GetMapping
-    public ResponseEntity<List<CustomerDTO>> getAllCustomers(@RequestParam(required = false) Long storeId) {
-        if (storeId != null) {
-            return ResponseEntity.ok(customerService.getCustomersByStoreId(storeId));
-        }
-        return ResponseEntity.ok(customerService.getAllCustomers());
+    public ResponseEntity<List<CustomerDTO>> getAllCustomers() {
+        Long storeId = securityUtils.currentStoreId();
+        return ResponseEntity.ok(customerService.getCustomersByStoreId(storeId));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<CustomerDTO> getCustomerById(@PathVariable Integer id) {
+        Long storeId = securityUtils.currentStoreId();
+        Customer customer = customerRepository.findById(id).orElseThrow(() -> new RuntimeException("Customer not found"));
+        if (customer.getStoreId() == null || !storeId.equals(customer.getStoreId())) {
+            throw new RuntimeException("Customer not found");
+        }
         return ResponseEntity.ok(customerService.getCustomerById(id));
     }
 
     @PostMapping
-    public ResponseEntity<?> createCustomer(@RequestBody Map<String, String> body,
-            @RequestParam(required = false) Long storeId) {
+    public ResponseEntity<?> createCustomer(@RequestBody Map<String, String> body) {
         try {
+            Long storeId = securityUtils.currentStoreId();
             String name = body.getOrDefault("name", "").trim();
             String email = body.getOrDefault("email", "").trim();
             String phone = body.getOrDefault("phone", "").trim();
@@ -64,8 +74,7 @@ public class CustomerController {
             customer.setCity(body.getOrDefault("city", null));
             customer.setState(body.getOrDefault("state", null));
             customer.setZipCode(body.getOrDefault("zipCode", null));
-            if (storeId != null)
-                customer.setStoreId(storeId);
+            customer.setStoreId(storeId);
 
             Customer saved = customerRepository.save(customer);
             return new ResponseEntity<>(saved, HttpStatus.CREATED);
@@ -78,7 +87,11 @@ public class CustomerController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateCustomer(@PathVariable Integer id, @RequestBody Map<String, String> body) {
         try {
+            Long storeId = securityUtils.currentStoreId();
             Customer customer = customerRepository.findById(id).orElseThrow(() -> new RuntimeException("Customer not found"));
+            if (customer.getStoreId() == null || !storeId.equals(customer.getStoreId())) {
+                throw new RuntimeException("Customer not found");
+            }
             String name = body.getOrDefault("name", null);
             String email = body.getOrDefault("email", null);
             String phone = body.getOrDefault("phone", null);

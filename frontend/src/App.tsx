@@ -39,6 +39,22 @@ function App() {
     localStorage.setItem('retailstore-dark-mode', String(darkMode));
   }, [darkMode]);
 
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('retailstore-user');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.token) {
+          setUser(parsed);
+        } else {
+          localStorage.removeItem('retailstore-user');
+        }
+      }
+    } catch {
+      localStorage.removeItem('retailstore-user');
+    }
+  }, []);
+
   const handleLogin = (userInfo: UserInfo) => {
     setUser(userInfo);
     localStorage.setItem('retailstore-user', JSON.stringify(userInfo));

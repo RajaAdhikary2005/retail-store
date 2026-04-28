@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { UserCheck, UserX, Clock, CheckCircle, XCircle } from 'lucide-react';
-import { fetchUsers } from '../services/api';
+import { fetchUsers, updateUserStatus } from '../services/api';
 import { ROLES, type UserInfo } from '../services/auth';
 
 interface RequestsProps {
@@ -31,15 +31,11 @@ export default function Requests({ user }: RequestsProps) {
 
   const handleAction = async (userId: number, status: string, userName: string) => {
     try {
-      await fetch(`https://retail-store-k6pr.onrender.com/api/auth/users/${userId}/status`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status })
-      });
+      await updateUserStatus(userId, status);
       setActionMsg({ type: 'success', text: `${userName} has been ${status}.` });
       loadUsers();
-    } catch {
-      setActionMsg({ type: 'error', text: 'Failed to update request.' });
+    } catch (error: any) {
+      setActionMsg({ type: 'error', text: error?.message || 'Failed to update request.' });
     }
     setTimeout(() => setActionMsg(null), 4000);
   };

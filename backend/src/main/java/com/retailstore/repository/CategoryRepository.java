@@ -9,6 +9,7 @@ import java.util.Optional;
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Integer> {
     Optional<Category> findByName(String name);
+    Optional<Category> findByNameAndStoreId(String name, Long storeId);
     List<Category> findByStoreId(Long storeId);
     void deleteByStoreId(Long storeId);
 }

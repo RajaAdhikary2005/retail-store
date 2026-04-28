@@ -2,6 +2,8 @@ package com.retailstore.controller;
 
 import com.retailstore.model.Store;
 import com.retailstore.repository.StoreRepository;
+import com.retailstore.security.AuthenticatedUser;
+import com.retailstore.security.SecurityUtils;
 import com.retailstore.service.StoreService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -11,7 +13,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/stores")
-@CrossOrigin(origins = "*")
 public class StoreController {
 
     @Autowired
@@ -20,13 +21,39 @@ public class StoreController {
     @Autowired
     private StoreService storeService;
 
+    @Autowired
+    private SecurityUtils securityUtils;
+
+    @GetMapping("/public")
+    public ResponseEntity<List<java.util.Map<String, Object>>> getPublicStores() {
+        return ResponseEntity.ok(storeRepository.findAll()
+                .stream()
+                .map(store -> {
+                    java.util.Map<String, Object> storeInfo = new java.util.HashMap<>();
+                    storeInfo.put("id", store.getId());
+                    storeInfo.put("name", store.getName());
+                    return storeInfo;
+                })
+                .toList());
+    }
+
     @GetMapping
     public ResponseEntity<List<Store>> getAllStores() {
-        return ResponseEntity.ok(storeRepository.findAll());
+        AuthenticatedUser user = securityUtils.currentUser();
+        if (user.storeId() == null) {
+            return ResponseEntity.ok(List.of());
+        }
+        return ResponseEntity.ok(storeRepository.findAll()
+                .stream()
+                .filter(store -> store.getId().equals(user.storeId()))
+                .toList());
     }
 
     @PostMapping
     public ResponseEntity<Store> createStore(@RequestBody Store store) {
+        securityUtils.requireAdmin();
+        AuthenticatedUser user = securityUtils.currentUser();
+        store.setAdminEmail(user.email());
         Store saved = storeRepository.save(store);
         return ResponseEntity.ok(saved);
     }
@@ -39,6 +66,10 @@ public class StoreController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteStore(@PathVariable Long id) {
+        securityUtils.requireAdmin();
+        if (!securityUtils.currentStoreId().equals(id)) {
+            return ResponseEntity.status(403).body("You can only delete your own store");
+        }
         if (!storeRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
         }

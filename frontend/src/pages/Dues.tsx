@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, Download, IndianRupee, Users, Truck, AlertCircle, CheckCircle, Clock, Plus, CreditCard, X } from 'lucide-react';
-import { fetchDues, createDue, exportToCSV, fetchCustomers, fetchSuppliers, type Due } from '../services/api';
+import { fetchDues, createDue, exportToCSV, fetchCustomers, fetchSuppliers, payDue, type Due } from '../services/api';
 import { type UserRole, ROLES } from '../services/auth';
 import type { Customer } from '../types';
 
@@ -99,31 +99,16 @@ export default function Dues({ userRole }: DuesProps) {
     setPayProcessing(true);
     setPayMsg(null);
     try {
-      const res = await fetch(`https://retail-store-k6pr.onrender.com/api/dues/${payingDue.id}/pay`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: payAmount })
+      const updated = await payDue(payingDue.id, payAmount);
+      const remaining = updated.totalDue;
+      setPayMsg({ type: 'success', text: remaining <= 0
+        ? `✓ Full payment received! Due marked as Paid.`
+        : `✓ ₹${payAmount.toLocaleString('en-IN')} received. Remaining: ₹${remaining.toLocaleString('en-IN')}`
       });
-      if (res.ok) {
-        const remaining = payingDue.totalDue - payAmount;
-        setPayMsg({ type: 'success', text: remaining <= 0
-          ? `✓ Full payment received! Due marked as Paid.`
-          : `✓ ₹${payAmount.toLocaleString('en-IN')} received. Remaining: ₹${remaining.toLocaleString('en-IN')}`
-        });
-        // Update local state immediately
-        setDues(prev => prev.map(d => {
-          if (d.id === payingDue.id) {
-            return { ...d, totalDue: Math.max(0, d.totalDue - payAmount), status: remaining <= 0 ? 'Paid' : d.status };
-          }
-          return d;
-        }));
-        setTimeout(() => { setShowPayModal(false); setPayingDue(null); setPayAmount(0); setPayMsg(null); }, 2000);
-      } else {
-        const errText = await res.text();
-        setPayMsg({ type: 'error', text: errText || 'Payment failed' });
-      }
-    } catch {
-      setPayMsg({ type: 'error', text: 'Network error — payment failed' });
+      setDues(prev => prev.map(d => (d.id === updated.id ? updated : d)));
+      setTimeout(() => { setShowPayModal(false); setPayingDue(null); setPayAmount(0); setPayMsg(null); }, 2000);
+    } catch (error: any) {
+      setPayMsg({ type: 'error', text: error?.message || 'Payment failed' });
     } finally {
       setPayProcessing(false);
     }
@@ -338,3 +323,4 @@ export default function Dues({ userRole }: DuesProps) {
     </>
   );
 }
+
