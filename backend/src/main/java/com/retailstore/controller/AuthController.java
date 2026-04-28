@@ -216,7 +216,7 @@ public class AuthController {
 
             String htmlContent = "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333; border: 1px solid #eaeaea; border-radius: 10px;'>"
                     + "<div style='text-align: center; margin-bottom: 20px;'>"
-                    + "<img src='https://retail-store-gilt.vercel.app/retailstore-logo.png' alt='Retail Store Logo' style='max-width: 180px;'/>"
+                    + "<img src='https://store-raja.vercel.app/retailstore-logo.png' alt='Retail Store Logo' style='max-width: 180px;'/>"
                     + "</div>"
                     + "<h2 style='color: #1f2937;'>Hello " + user.getName() + ",</h2>"
                     + "<p style='font-size: 15px; line-height: 1.5;'>We received a request to reset your password for your account at <b>" + storeName + "</b>.</p>"
