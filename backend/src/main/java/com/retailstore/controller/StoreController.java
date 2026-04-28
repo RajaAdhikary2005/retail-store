@@ -28,7 +28,12 @@ public class StoreController {
     public ResponseEntity<List<java.util.Map<String, Object>>> getPublicStores() {
         return ResponseEntity.ok(storeRepository.findAll()
                 .stream()
-                .map(store -> java.util.Map.of("id", store.getId(), "name", store.getName()))
+                .map(store -> {
+                    java.util.Map<String, Object> storeInfo = new java.util.HashMap<>();
+                    storeInfo.put("id", store.getId());
+                    storeInfo.put("name", store.getName());
+                    return storeInfo;
+                })
                 .toList());
     }
 

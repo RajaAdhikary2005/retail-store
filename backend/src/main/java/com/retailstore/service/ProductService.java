@@ -48,8 +48,7 @@ public class ProductService {
             category = categoryRepository.findById(dto.getCategoryId())
                     .orElseThrow(() -> new RuntimeException("Category not found"));
         } else if (dto.getCategoryName() != null) {
-            category = categoryRepository.findByNameAndStoreId(dto.getCategoryName(), storeId)
-                    .or(() -> categoryRepository.findByName(dto.getCategoryName()))
+            category = categoryRepository.findByName(dto.getCategoryName())
                     .orElseGet(() -> {
                         Category newCat = new Category();
                         newCat.setName(dto.getCategoryName());
@@ -106,8 +105,7 @@ public class ProductService {
                     .orElseThrow(() -> new RuntimeException("Category not found"));
             product.setCategory(category);
         } else if (dto.getCategoryName() != null) {
-            Category category = categoryRepository.findByNameAndStoreId(dto.getCategoryName(), storeId)
-                    .or(() -> categoryRepository.findByName(dto.getCategoryName()))
+            Category category = categoryRepository.findByName(dto.getCategoryName())
                     .orElseGet(() -> {
                         Category newCat = new Category();
                         newCat.setName(dto.getCategoryName());

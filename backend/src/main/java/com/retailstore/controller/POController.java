@@ -35,7 +35,7 @@ public class POController {
     }
 
     @PatchMapping("/{id}/status")
-    public ResponseEntity<PurchaseOrder> updatePOStatus(
+    public ResponseEntity<?> updatePOStatus(
             @PathVariable Long id,
             @RequestBody Map<String, Object> body) {
         Long storeId = securityUtils.currentStoreId();
