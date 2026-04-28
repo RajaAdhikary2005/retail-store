@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -35,4 +36,13 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
 
     @Query(value = "SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE store_id = :storeId AND status != 'Cancelled'", nativeQuery = true)
     BigDecimal getTotalSalesByStoreId(Long storeId);
+
+    @Query(value = "SELECT COALESCE(SUM(total_amount), 0) FROM orders " +
+            "WHERE store_id = :storeId " +
+            "AND status != 'Cancelled' " +
+            "AND order_date >= :startDate " +
+            "AND order_date < :endDate", nativeQuery = true)
+    BigDecimal getSalesByStoreIdBetweenDates(Long storeId, LocalDate startDate, LocalDate endDate);
+
+    Long countByStoreIdAndOrderDateGreaterThanEqualAndOrderDateLessThan(Long storeId, LocalDate startDate, LocalDate endDate);
 }
