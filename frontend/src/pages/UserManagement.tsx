@@ -15,6 +15,22 @@ interface UserManagementProps {
   user?: UserInfo;
 }
 
+const ROLE_PRIORITY: Record<UserRole, number> = {
+  admin: 0,
+  manager: 1,
+  staff: 2,
+};
+
+function sortUsersByRole(users: ManagedUser[]): ManagedUser[] {
+  return [...users].sort((a, b) => {
+    const roleDiff = (ROLE_PRIORITY[a.role] ?? 99) - (ROLE_PRIORITY[b.role] ?? 99);
+    if (roleDiff !== 0) return roleDiff;
+    const nameDiff = (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' });
+    if (nameDiff !== 0) return nameDiff;
+    return (a.email || '').localeCompare(b.email || '', undefined, { sensitivity: 'base' });
+  });
+}
+
 export default function UserManagement({ user }: UserManagementProps) {
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +44,7 @@ export default function UserManagement({ user }: UserManagementProps) {
     fetchUsers(currentStoreId).then(data => {
       // Filter out pending users — those show in the Requests page only
       const activeUsers = data.filter((u: any) => u.status !== 'pending');
-      setUsers(activeUsers.map((u: any) => ({
+      const mappedUsers = activeUsers.map((u: any) => ({
         id: u.id,
         name: u.name || 'Unknown',
         email: u.email,
@@ -36,7 +52,8 @@ export default function UserManagement({ user }: UserManagementProps) {
         avatar: u.avatar || (u.name || 'U').substring(0, 2).toUpperCase(),
         status: u.status || 'active',
         storeId: u.storeId,
-      })));
+      }));
+      setUsers(sortUsersByRole(mappedUsers));
       setLoading(false);
     });
   }, [currentStoreId]);
@@ -46,7 +63,7 @@ export default function UserManagement({ user }: UserManagementProps) {
   const updateUserStatus = async (id: number, status: string) => {
     try {
       await updateUserStatusApi(id, status);
-      setUsers(prev => prev.map(u => u.id === id ? { ...u, status } : u));
+      setUsers(prev => sortUsersByRole(prev.map(u => u.id === id ? { ...u, status } : u)));
     } catch {
       flash('Could not update status. Please try again.');
     }
@@ -55,7 +72,7 @@ export default function UserManagement({ user }: UserManagementProps) {
   const updateUserRole = async (id: number, newRole: string) => {
     try {
       await updateUserRoleApi(id, newRole);
-      setUsers(prev => prev.map(u => u.id === id ? { ...u, role: newRole as UserRole } : u));
+      setUsers(prev => sortUsersByRole(prev.map(u => u.id === id ? { ...u, role: newRole as UserRole } : u)));
     } catch {
       flash('Could not update role. Please try again.');
     }
