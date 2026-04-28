@@ -69,4 +69,4 @@ New users → Click **Sign Up** → Admin accounts are instant, Manager/Staff ne
 
 ---
 
-> Made with ❤️ by Raja Adhikary
+>

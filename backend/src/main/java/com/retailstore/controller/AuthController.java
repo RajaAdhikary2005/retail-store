@@ -238,6 +238,9 @@ public class AuthController {
                     + "<div style='text-align: center; margin-top: 30px; font-size: 12px; color: #9ca3af;'>"
                     + "Retail Store Management System"
                     + "</div>"
+                    + "<div style='text-align: center; margin-top: 30px; font-size: 10px; color: #9ca3af;'>"
+                    + "Made with ❤️ by Raja Adhikary"
+                    + "</div>"
                     + "</div>";
 
             helper.setText(htmlContent, true);
