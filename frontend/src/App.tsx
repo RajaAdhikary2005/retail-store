@@ -126,7 +126,7 @@ function App() {
         <footer className="app-footer">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
             <Logo size={32} />
-            <span style={{ fontFamily: "'Outfit', 'Montserrat', 'Trebuchet MS', sans-serif", fontWeight: 700, fontSize: 15, letterSpacing: '-0.3px', background: 'linear-gradient(135deg, #64748b, #0f172a)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>RetailStore</span>
+            <span style={{ fontFamily: "'Outfit', 'Montserrat', 'Trebuchet MS', sans-serif", fontWeight: 700, fontSize: 15, letterSpacing: '-0.3px' }}>RetailStore</span>
           </div>
           <div className="footer-brand">
             Made with <Heart size={12} style={{ color: '#ef4444', fill: '#ef4444', display: 'inline', verticalAlign: 'middle', margin: '0 3px' }} /> by Raja Adhikary
@@ -134,7 +134,10 @@ function App() {
           <div>
             © {new Date().getFullYear()} Raja Adhikary. All rights reserved.
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px', textAlign: 'center' }}>
+            Copyright © 2026 All Rights Reserved by Raja Adhikary
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: '4px' }}>
             <Mail size={12} />
             <a href="mailto:rajaadhikary05032005@gmail.com">rajaadhikary05032005@gmail.com</a>
           </div>
