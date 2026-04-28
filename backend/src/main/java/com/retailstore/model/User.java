@@ -25,7 +25,12 @@ public class User {
     private LocalDateTime createdAt;
 
     private String resetOtp;
+    private String resetOtpHash;
     private LocalDateTime resetOtpExpiry;
+    private Integer resetOtpAttempts;
+    private Integer resetOtpRequestCount;
+    private LocalDateTime resetOtpWindowStart;
+    private LocalDateTime resetOtpLockedUntil;
 
     public User() {}
 
@@ -49,8 +54,18 @@ public class User {
 
     public String getResetOtp() { return resetOtp; }
     public void setResetOtp(String resetOtp) { this.resetOtp = resetOtp; }
+    public String getResetOtpHash() { return resetOtpHash; }
+    public void setResetOtpHash(String resetOtpHash) { this.resetOtpHash = resetOtpHash; }
     public LocalDateTime getResetOtpExpiry() { return resetOtpExpiry; }
     public void setResetOtpExpiry(LocalDateTime resetOtpExpiry) { this.resetOtpExpiry = resetOtpExpiry; }
+    public Integer getResetOtpAttempts() { return resetOtpAttempts; }
+    public void setResetOtpAttempts(Integer resetOtpAttempts) { this.resetOtpAttempts = resetOtpAttempts; }
+    public Integer getResetOtpRequestCount() { return resetOtpRequestCount; }
+    public void setResetOtpRequestCount(Integer resetOtpRequestCount) { this.resetOtpRequestCount = resetOtpRequestCount; }
+    public LocalDateTime getResetOtpWindowStart() { return resetOtpWindowStart; }
+    public void setResetOtpWindowStart(LocalDateTime resetOtpWindowStart) { this.resetOtpWindowStart = resetOtpWindowStart; }
+    public LocalDateTime getResetOtpLockedUntil() { return resetOtpLockedUntil; }
+    public void setResetOtpLockedUntil(LocalDateTime resetOtpLockedUntil) { this.resetOtpLockedUntil = resetOtpLockedUntil; }
 
     @PrePersist
     protected void onCreate() {

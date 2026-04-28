@@ -21,6 +21,8 @@ function friendlyError(msg: string): string {
     return 'Unable to connect to the server. Please check your internet connection and try again.';
   if (lower.includes('500') || lower.includes('internal server'))
     return 'The server encountered an issue. Please try again in a moment.';
+  if (lower.includes('password reset service is temporarily unavailable'))
+    return 'Password reset is temporarily unavailable. Please try again later.';
   if (lower.includes('json') || lower.includes('unexpected token'))
     return 'There was a communication error with the server. Please try again.';
   if (lower.includes('timeout'))
@@ -30,6 +32,7 @@ function friendlyError(msg: string): string {
 }
 
 export default function Login({ onLogin }: LoginProps) {
+  const MIN_PASSWORD_LENGTH = 8;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -84,8 +87,8 @@ export default function Login({ onLogin }: LoginProps) {
         setError('Please enter your full name');
         return;
       }
-      if (password.length < 6) {
-        setError('Password must be at least 6 characters');
+      if (password.length < MIN_PASSWORD_LENGTH) {
+        setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters`);
         return;
       }
 
@@ -145,7 +148,7 @@ export default function Login({ onLogin }: LoginProps) {
       if (!email.trim()) { setError('Please enter your email address'); return; }
       resetPasswordApi(email.toLowerCase())
         .then(() => {
-          setSuccessMsg('An OTP has been sent to your email.');
+          setSuccessMsg('If the email exists, an OTP has been sent.');
           setMode('otp');
         })
         .catch(err => { setError(friendlyError(err.message)); });
@@ -164,7 +167,7 @@ export default function Login({ onLogin }: LoginProps) {
     }
 
     if (mode === 'reset') {
-      if (newPassword.length < 6) { setError('Password must be at least 6 characters'); return; }
+      if (newPassword.length < MIN_PASSWORD_LENGTH) { setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters`); return; }
       setNewPasswordApi(email.toLowerCase(), otp.trim(), newPassword)
         .then(() => {
           setSuccessMsg('Password successfully reset. You can now login.');
@@ -276,7 +279,7 @@ export default function Login({ onLogin }: LoginProps) {
                 type="password"
                 placeholder="••••••••"
                 required
-                minLength={6}
+                minLength={MIN_PASSWORD_LENGTH}
                 value={newPassword}
                 onChange={e => { setNewPassword(e.target.value); setError(''); setSuccessMsg(''); }}
               />
