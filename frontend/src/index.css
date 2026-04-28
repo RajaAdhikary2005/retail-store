@@ -197,6 +197,7 @@ ul { list-style: none; }
 .stat-info .stat-change { font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 4px; }
 .stat-change.positive { color: var(--accent-green); }
 .stat-change.negative { color: var(--accent-red); }
+.stat-change.neutral { color: var(--text-secondary); }
 .stat-icon {
   width: 44px; height: 44px; border-radius: var(--radius-md);
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
